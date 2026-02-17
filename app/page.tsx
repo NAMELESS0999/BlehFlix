@@ -138,19 +138,28 @@ export default function BlehflixProductionBuild() {
           </div>
           {isStreaming && (
   <div className="p-12 bg-black animate-in zoom-in duration-500">
-     <div className="relative w-full aspect-video border-y-2 border-red-600 shadow-[0_0_100px_rgba(229,9,20,0.15)] bg-zinc-900">
-       {/* UPDATED TO VIDORA PLAYER */}
-       <iframe 
-         src={`https://watch.vidora.su/embed/movie/${activeMovie?.id}`} 
-         className="absolute inset-0 w-full h-full" 
-         allowFullScreen 
-         scrolling="no"
-         frameBorder="0"
-       />
-     </div>
-     <p className="text-center text-[10px] text-zinc-700 mt-4 uppercase tracking-widest font-black">
-       Source: Vidora Professional Streaming • Secure Link
-     </p>
+    <div className="relative w-full aspect-video border-y-2 border-red-600 shadow-[0_0_100px_rgba(229,9,20,0.15)] bg-zinc-900 overflow-hidden">
+      <iframe 
+        src={`https://watch.vidora.su/embed/movie/${activeMovie?.id}`} 
+        className="absolute inset-0 w-full h-full" 
+        allowFullScreen 
+        scrolling="no"
+        frameBorder="0"
+        allow="autoplay; encrypted-media"
+        referrerPolicy="origin"
+      />
+    </div>
+    <div className="mt-4 flex flex-col items-center gap-2">
+      <p className="text-[10px] text-zinc-700 uppercase tracking-widest font-black">
+        Source: Vidora Player • Rank #{heroIndex + 1}
+      </p>
+      {/* Dynamic Classic Label Fix */}
+      {activeMovie && activeMovie.vote_average >= 8.2 ? (
+        <span className="text-[9px] text-yellow-500 font-bold border border-yellow-500/30 px-2 py-0.5 rounded">OFFICIAL CLASSIC</span>
+      ) : (
+        <span className="text-[9px] text-zinc-500 font-bold border border-zinc-500/30 px-2 py-0.5 rounded">TRENDING TOP 25</span>
+      )}
+    </div>
   </div>
 )}
         </main>
