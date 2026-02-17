@@ -1,34 +1,48 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 
-interface Movie {
-  id: number; title: string; poster_path: string; backdrop_path: string;
-  overview: string; release_date: string; vote_average: number;
-  vote_count: number; popularity: number; original_language: string;
+// 1. Defined a strict interface that handles both Movies (title) and TV (name)
+interface Media {
+  id: number;
+  title?: string;      // Movies use 'title'
+  name?: string;       // TV uses 'name'
+  poster_path: string;
+  backdrop_path: string;
+  overview: string;
+  release_date?: string;    // Movies
+  first_air_date?: string;  // TV
+  vote_average: number;
+  vote_count: number;
 }
 
-export default function BlehflixProductionBuild() {
-  const [movies, setMovies] = useState<Movie[]>([]);
-  const [searchResults, setSearchResults] = useState<Movie[]>([]);
+export default function BlehflixFinalBuild() {
+  const [items, setItems] = useState<Media[]>([]);
+  const [searchResults, setSearchResults] = useState<Media[]>([]);
   const [query, setQuery] = useState('');
+  const [type, setType] = useState<'movie' | 'tv'>('movie'); // Toggles between Movie/TV
   const [view, setView] = useState<'browse' | 'details'>('browse');
-  const [activeMovie, setActiveMovie] = useState<Movie | null>(null);
+  const [activeItem, setActiveItem] = useState<Media | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [heroIndex, setHeroIndex] = useState(0);
   
   const API_KEY = "3c08a2b895c3295cc09d583b3fc279cf";
 
+  // 2. Fetch logic that automatically switches based on 'type'
   useEffect(() => {
-    fetch(`https://api.themoviedb.org/3/movie/top_rated?api_key=${API_KEY}&language=en-US&page=1`)
+    fetch(`https://api.themoviedb.org/3/${type}/top_rated?api_key=${API_KEY}&language=en-US&page=1`)
       .then(res => res.json())
-      .then(data => setMovies(data.results || []));
-  }, []);
+      .then(data => {
+        setItems(data.results || []);
+        setHeroIndex(0); // Reset hero slide when switching types
+      })
+      .catch(err => console.error("API Error:", err));
+  }, [type]);
 
   const handleSearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const term = e.target.value;
     setQuery(term);
     if (term.length > 2) {
-      const res = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${term}`);
+      const res = await fetch(`https://api.themoviedb.org/3/search/${type}?api_key=${API_KEY}&query=${term}`);
       const data = await res.json();
       setSearchResults(data.results || []);
     } else {
@@ -36,144 +50,226 @@ export default function BlehflixProductionBuild() {
     }
   };
 
-  const openDetails = (movie: Movie) => {
-    setActiveMovie(movie);
+  const openDetails = (item: Media) => {
+    setActiveItem(item);
     setView('details');
     setIsStreaming(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const nextHero = () => setHeroIndex((prev) => (prev + 1) % 5);
-  const prevHero = () => setHeroIndex((prev) => (prev === 0 ? 4 : prev - 1));
+  // 3. Smart URL Generator for the Embed
+  const getStreamUrl = () => {
+    if (!activeItem) return "";
+    const baseUrl = "https://watch-v2.autoembed.cc";
+    // If it's a TV show, we MUST add /1/1 (Season 1, Ep 1) to start the player correctly
+    if (type === 'tv') {
+      return `${baseUrl}/tv/${activeItem.id}/1/1`;
+    }
+    // Movies just need the ID
+    return `${baseUrl}/movie/${activeItem.id}`;
+  };
 
-  const currentHero = movies[heroIndex];
-  const displayMovies = query.length > 2 ? searchResults : movies;
+  const displayItems = query.length > 2 ? searchResults : items;
+  const currentHero = items[heroIndex];
 
   return (
     <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-red-600">
+      
+      {/* --- NAVIGATION --- */}
       <nav className="p-6 flex flex-col md:flex-row justify-between items-center fixed w-full z-50 bg-gradient-to-b from-black/90 to-transparent backdrop-blur-md border-b border-white/5">
-        <h1 onClick={() => {setView('browse'); setQuery('');}} className="text-3xl font-black text-[#E50914] cursor-pointer tracking-tighter mb-4 md:mb-0">BLEHFLIX™</h1>
-        <div className="flex flex-1 justify-center max-w-xl w-full px-4">
+        <div className="flex items-center gap-8 mb-4 md:mb-0">
+          <h1 onClick={() => {setView('browse'); setQuery('');}} className="text-3xl font-black text-[#E50914] cursor-pointer tracking-tighter hover:scale-105 transition">BLEHFLIX™</h1>
+          
+          {/* Type Toggle */}
+          <div className="flex bg-zinc-900 rounded-full p-1 border border-zinc-800">
+            <button 
+              onClick={() => { setType('movie'); setQuery(''); }} 
+              className={`px-5 py-1.5 rounded-full text-[10px] font-black uppercase transition-all tracking-widest ${type === 'movie' ? 'bg-red-600 text-white shadow-lg shadow-red-600/20' : 'text-zinc-500 hover:text-white'}`}
+            >
+              Movies
+            </button>
+            <button 
+              onClick={() => { setType('tv'); setQuery(''); }} 
+              className={`px-5 py-1.5 rounded-full text-[10px] font-black uppercase transition-all tracking-widest ${type === 'tv' ? 'bg-red-600 text-white shadow-lg shadow-red-600/20' : 'text-zinc-500 hover:text-white'}`}
+            >
+              TV Shows
+            </button>
+          </div>
+        </div>
+        
+        <div className="flex flex-1 justify-center max-w-lg w-full px-4">
           <input 
             type="text" 
-            placeholder="Search all-time classics..." 
-            className="w-full bg-zinc-900/80 border border-zinc-800 px-6 py-2 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-red-600 transition-all shadow-inner"
+            placeholder={`Search ${type === 'movie' ? 'Cinematic Universe' : 'Television Series'}...`}
+            className="w-full bg-zinc-900/80 border border-zinc-800 px-6 py-3 rounded-full text-xs font-bold focus:outline-none focus:ring-2 focus:ring-red-600 transition-all shadow-inner tracking-wide"
             value={query}
             onChange={handleSearch}
           />
         </div>
+
         <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
-          <span onClick={() => {setView('browse'); setQuery('');}} className="hover:text-red-600 cursor-pointer transition underline decoration-red-600 underline-offset-8">Top 25</span>
-          <a href="https://discord.com/invite/NzPpXVurAq" target="_blank" className="hover:text-red-600 transition">Community</a>
+          <a href="https://discord.com/invite/NzPpXVurAq" target="_blank" rel="noreferrer" className="hover:text-red-600 transition">Community</a>
         </div>
       </nav>
 
+      {/* --- MAIN CONTENT AREA --- */}
       {view === 'browse' ? (
-        <main className="animate-in fade-in duration-1000">
+        <main className="animate-in fade-in duration-700">
+          
+          {/* Hero Section (Only shows when not searching) */}
           {currentHero && query.length <= 2 && (
-            <div className="relative h-[85vh] w-full flex items-center px-12">
-              <img src={`https://image.tmdb.org/t/p/original${currentHero.backdrop_path}`} className="absolute inset-0 w-full h-full object-cover opacity-40 transition-opacity duration-1000" alt="Featured Background" />
-              <div className="absolute inset-0 bg-gradient-to-r from-[#050505] via-[#050505]/60 to-transparent" />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#050505] to-transparent" />
-              <div className="relative z-10 max-w-3xl">
-                <div className="flex items-center gap-3 mb-4">
-                    <span className="bg-yellow-500 text-black px-2 py-0.5 rounded text-[10px] font-black italic">TOP RATED</span>
-                    <span className="text-zinc-400 text-xs font-bold tracking-widest uppercase">Rank #{heroIndex + 1}</span>
+            <div className="relative h-[85vh] w-full flex items-center px-12 overflow-hidden">
+              <img 
+                src={`https://image.tmdb.org/t/p/original${currentHero.backdrop_path}`} 
+                className="absolute inset-0 w-full h-full object-cover opacity-50 scale-105 animate-in fade-in zoom-in duration-[3000ms]" 
+                alt="Hero Background" 
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-[#050505] via-[#050505]/80 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent" />
+              
+              <div className="relative z-10 max-w-3xl pt-20">
+                <div className="flex items-center gap-3 mb-6">
+                    <span className="bg-[#E50914] text-white px-3 py-1 rounded-sm text-[10px] font-black italic uppercase tracking-wider shadow-lg shadow-red-900/50">
+                      #{heroIndex + 1} Global
+                    </span>
+                    <span className="text-zinc-400 text-xs font-bold tracking-[0.3em] uppercase border border-zinc-700 px-3 py-1 rounded-sm">
+                      {type === 'movie' ? 'Top Rated Movie' : 'Top Rated Series'}
+                    </span>
                 </div>
-                <h2 className="text-7xl font-black mb-6 tracking-tighter italic uppercase leading-none drop-shadow-2xl">{currentHero.title}</h2>
-                <p className="text-lg text-zinc-400 mb-8 line-clamp-3 font-light max-w-xl italic">
-                  &ldquo;{currentHero.overview}&rdquo;
+                <h2 className="text-6xl md:text-8xl font-black mb-6 tracking-tighter italic uppercase leading-[0.85] drop-shadow-2xl text-transparent bg-clip-text bg-gradient-to-b from-white to-zinc-400">
+                  {currentHero.title || currentHero.name}
+                </h2>
+                <p className="text-lg text-zinc-300 mb-10 line-clamp-3 font-medium max-w-xl leading-relaxed opacity-90">
+                  {currentHero.overview}
                 </p>
-                <div className="flex gap-4">
-                  <button onClick={() => openDetails(currentHero)} className="bg-red-600 text-white px-10 py-4 rounded-sm font-black hover:bg-white hover:text-black transition-all uppercase tracking-tighter shadow-xl shadow-red-600/20">Stream Now</button>
-                  <div className="flex gap-2">
-                    <button onClick={prevHero} className="bg-zinc-900/80 border border-zinc-700 p-4 rounded-sm hover:bg-white hover:text-black transition">←</button>
-                    <button onClick={nextHero} className="bg-zinc-900/80 border border-zinc-700 p-4 rounded-sm hover:bg-white hover:text-black transition">→</button>
-                  </div>
-                </div>
+                <button 
+                  onClick={() => openDetails(currentHero)} 
+                  className="bg-white text-black px-12 py-4 rounded-sm font-black hover:bg-[#E50914] hover:text-white transition-all transform hover:scale-105 uppercase tracking-tighter shadow-2xl"
+                >
+                  Play Now
+                </button>
               </div>
             </div>
           )}
 
-          <div className={`px-12 pb-20 relative z-20 ${query.length <= 2 ? "-mt-24" : "pt-32"}`}>
-            <h3 className="text-xs font-black mb-8 text-zinc-500 uppercase tracking-[0.4em]">
-              {query.length > 2 ? `Search results` : "Greatest Movies Ever Made"}
+          {/* Grid Section */}
+          <div className={`px-8 md:px-12 pb-20 relative z-20 ${query.length <= 2 ? "-mt-32" : "pt-32"}`}>
+            <h3 className="text-xs font-black mb-8 text-zinc-500 uppercase tracking-[0.4em] flex items-center gap-4">
+              <span className="w-8 h-[1px] bg-red-600 inline-block"></span>
+              {query.length > 2 ? `Search Results` : `Trending ${type === 'movie' ? 'Movies' : 'TV Shows'}`}
             </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-8">
-              {displayMovies.map((movie, index) => (
-                <div key={movie.id} onClick={() => openDetails(movie)} className="group cursor-pointer">
-                  <div className="relative aspect-[2/3] overflow-hidden rounded-sm shadow-2xl transition-all duration-500 group-hover:scale-110 z-0 group-hover:z-10 bg-zinc-900">
-                    <img src={movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : 'https://via.placeholder.com/500x750?text=No+Poster'} className="w-full h-full object-cover" alt={movie.title} />
-                    {query.length <= 2 && (
-                        <div className="absolute top-2 left-2 bg-black/90 text-white font-black text-[10px] w-5 h-5 flex items-center justify-center border border-red-600/50 rounded-sm">
-                            {index + 1}
-                        </div>
-                    )}
-                    <div className="absolute inset-0 border border-white/5 group-hover:border-red-600 transition-colors" />
+            
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6 md:gap-8">
+              {displayItems.map((item) => (
+                <div key={item.id} onClick={() => openDetails(item)} className="group cursor-pointer relative">
+                  <div className="relative aspect-[2/3] overflow-hidden rounded-md shadow-2xl transition-all duration-300 group-hover:-translate-y-2 group-hover:shadow-[0_20px_40px_-15px_rgba(229,9,20,0.3)] bg-zinc-900">
+                    <img 
+                      src={item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : 'https://via.placeholder.com/500x750?text=No+Poster'} 
+                      className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity" 
+                      alt={item.title || item.name || "Media Poster"} 
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </div>
-                  <h4 className="mt-4 text-[10px] font-black uppercase tracking-widest text-zinc-400 group-hover:text-red-600 truncate">{movie.title}</h4>
-                  <p className="text-[9px] text-zinc-600 font-bold mt-1 tracking-tighter uppercase">{movie.release_date.split('-')[0]} • {movie.vote_average.toFixed(1)} Rating</p>
+                  <h4 className="mt-4 text-[11px] font-black uppercase tracking-wider text-zinc-400 group-hover:text-white truncate transition-colors">
+                    {item.title || item.name}
+                  </h4>
+                  <div className="flex justify-between items-center mt-1">
+                    <span className="text-[9px] text-zinc-600 font-bold tracking-wider">
+                      {(item.release_date || item.first_air_date || 'N/A').split('-')[0]}
+                    </span>
+                    <span className={`text-[9px] font-black px-1.5 rounded ${item.vote_average >= 8 ? 'bg-green-900/30 text-green-400' : 'text-zinc-600'}`}>
+                      {item.vote_average.toFixed(1)}
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
         </main>
       ) : (
+        /* --- DETAILS & STREAMING VIEW --- */
         <main className="animate-in slide-in-from-bottom-10 duration-700 pb-20">
-          <div className="relative h-[70vh]">
-            <img src={`https://image.tmdb.org/t/p/original${activeMovie?.backdrop_path}`} className="w-full h-full object-cover opacity-20" alt="Backdrop" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#050505] to-transparent" />
-            <div className="absolute bottom-12 left-12 right-12">
-               <div className="flex flex-wrap gap-4 mb-6">
-                  <div className="bg-zinc-900/80 border border-zinc-800 px-4 py-2 rounded-sm text-yellow-500 font-black tracking-widest text-xs uppercase">🏆 Absolute Classic</div>
-                  <div className="bg-zinc-900/80 border border-zinc-800 px-4 py-2 rounded-sm"><span className="text-green-500 font-black">{(activeMovie?.vote_average! * 10).toFixed(0)}%</span> <span className="text-[10px] uppercase ml-2 text-zinc-500">Score</span></div>
+          <div className="relative min-h-[80vh] w-full">
+            <img 
+              src={`https://image.tmdb.org/t/p/original${activeItem?.backdrop_path}`} 
+              className="absolute inset-0 w-full h-full object-cover opacity-20 fixed-bg" 
+              alt="Backdrop" 
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/50 to-transparent" />
+            
+            <div className="relative z-10 px-8 md:px-16 pt-32 md:pt-48 flex flex-col items-start max-w-7xl mx-auto">
+               
+               {/* 4. Strict "Absolute Classic" Logic */}
+               <div className="flex flex-wrap gap-3 mb-8">
+                  {activeItem && activeItem.vote_average >= 8.0 ? (
+                    <div className="bg-yellow-500/10 border border-yellow-500/50 text-yellow-500 px-4 py-1.5 rounded text-[10px] font-black tracking-[0.2em] uppercase flex items-center gap-2">
+                       <span>🏆</span> Absolute Classic
+                    </div>
+                  ) : (
+                     <div className="bg-zinc-800/50 border border-zinc-700 text-zinc-400 px-4 py-1.5 rounded text-[10px] font-black tracking-[0.2em] uppercase">
+                       {type === 'movie' ? 'Feature Film' : 'TV Series'}
+                     </div>
+                  )}
+                  <div className="bg-green-900/20 border border-green-900/50 text-green-500 px-4 py-1.5 rounded text-[10px] font-black tracking-[0.2em] uppercase">
+                    {(activeItem?.vote_average! * 10).toFixed(0)}% Match
+                  </div>
                </div>
-               <h2 className="text-8xl font-black mb-6 uppercase italic tracking-tighter leading-none text-white drop-shadow-2xl">{activeMovie?.title}</h2>
-               <p className="text-xl text-zinc-400 max-w-4xl mb-10 font-light leading-relaxed">{activeMovie?.overview}</p>
-               <div className="flex gap-4">
-                 <button onClick={() => setIsStreaming(true)} className="bg-white text-black px-12 py-5 rounded-sm font-black uppercase hover:bg-red-600 hover:text-white transition-all shadow-2xl active:scale-95">Stream Now</button>
-                 <button onClick={() => {setView('browse'); setQuery('');}} className="border border-zinc-700 px-12 py-5 rounded-sm font-black uppercase hover:bg-zinc-800 transition-all">Back</button>
+
+               <h2 className="text-5xl md:text-7xl lg:text-8xl font-black mb-8 uppercase italic tracking-tighter leading-[0.9] text-white drop-shadow-2xl">
+                 {activeItem?.title || activeItem?.name}
+               </h2>
+               
+               <p className="text-lg md:text-xl text-zinc-300 max-w-3xl mb-10 font-light leading-relaxed opacity-90">
+                 {activeItem?.overview}
+               </p>
+               
+               <div className="flex flex-wrap gap-4 mb-16">
+                 <button 
+                   onClick={() => setIsStreaming(true)} 
+                   className="bg-[#E50914] text-white px-10 py-4 rounded font-black uppercase tracking-widest hover:bg-red-700 transition-all shadow-[0_0_40px_-10px_rgba(229,9,20,0.5)] active:scale-95"
+                 >
+                   {isStreaming ? 'Scroll Down 👇' : 'Stream Now'}
+                 </button>
+                 <button 
+                   onClick={() => {setView('browse'); setQuery('');}} 
+                   className="border border-white/20 bg-black/20 backdrop-blur-sm px-10 py-4 rounded font-bold uppercase tracking-widest hover:bg-white hover:text-black transition-all"
+                 >
+                   Back to Browse
+                 </button>
                </div>
+
+               {/* 5. The Player (Conditional Render) */}
+               {isStreaming && (
+                <div className="w-full animate-in fade-in zoom-in duration-500 mb-20">
+                   <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-white/10 shadow-2xl bg-black">
+                     <iframe 
+                        src={getStreamUrl()} 
+                        className="absolute inset-0 w-full h-full" 
+                        allowFullScreen 
+                        allow="autoplay; encrypted-media; picture-in-picture"
+                        scrolling="no"
+                        frameBorder="0"
+                     />
+                   </div>
+                   <div className="mt-6 flex justify-between items-center px-4 border-l-2 border-red-600">
+                      <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-black">
+                        Playing: {activeItem?.title || activeItem?.name} {type === 'tv' && '(S1:E1)'}
+                      </p>
+                      <p className="text-[10px] text-zinc-600 uppercase tracking-widest">
+                        Source: AutoEmbed v2
+                      </p>
+                   </div>
+                </div>
+               )}
             </div>
           </div>
-          {isStreaming && (
-  <div className="p-12 bg-black animate-in zoom-in duration-500">
-    <div className="relative w-full aspect-video border-y-2 border-red-600 shadow-[0_0_100px_rgba(229,9,20,0.15)] bg-zinc-900 overflow-hidden">
-      <iframe 
-        src={`https://watch.vidora.su/embed/movie/${activeMovie?.id}`} 
-        className="absolute inset-0 w-full h-full" 
-        allowFullScreen 
-        scrolling="no"
-        frameBorder="0"
-        allow="autoplay; encrypted-media"
-        referrerPolicy="origin"
-      />
-    </div>
-    <div className="mt-4 flex flex-col items-center gap-2">
-      <p className="text-[10px] text-zinc-700 uppercase tracking-widest font-black">
-        Source: Vidora Player • Rank #{heroIndex + 1}
-      </p>
-      {/* Dynamic Classic Label Fix */}
-      {activeMovie && activeMovie.vote_average >= 8.2 ? (
-        <span className="text-[9px] text-yellow-500 font-bold border border-yellow-500/30 px-2 py-0.5 rounded">OFFICIAL CLASSIC</span>
-      ) : (
-        <span className="text-[9px] text-zinc-500 font-bold border border-zinc-500/30 px-2 py-0.5 rounded">TRENDING TOP 25</span>
-      )}
-    </div>
-  </div>
-)}
         </main>
       )}
 
-      <footer className="p-16 border-t border-white/5 bg-black/50 text-center">
-        <div className="flex flex-col items-center gap-6">
-          <div className="flex gap-8 text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">
-             <a href="https://docs.google.com/presentation/d/1aPZRt3i-KAH3ywYYWt6Cajgz4-J2yGw75qpmpllcBmc/edit?usp=sharing" target="_blank" rel="noreferrer" className="hover:text-white transition">Project Docs</a>
-             <a href="https://discord.com/invite/NzPpXVurAq" target="_blank" rel="noreferrer" className="hover:text-[#5865F2] transition">Discord</a>
-             <a href="https://www.patreon.com/posts/buy-me-coffee-136046422?utm_medium=clipboard_copy&utm_source=copyLink&utm_campaign=postshare_creator&utm_content=join_link" target="_blank" rel="noreferrer" className="hover:text-[#FF424D] transition">Patreon</a>
-          </div>
-          <p className="text-[10px] text-zinc-700 uppercase tracking-widest">© {new Date().getFullYear()} Blehflix™ • Educational Stream Concept</p>
-        </div>
+      <footer className="py-12 border-t border-white/5 bg-[#050505] text-center">
+        <p className="text-[10px] text-zinc-800 uppercase tracking-[0.3em] font-bold">
+          Blehflix™ • Educational Project • {new Date().getFullYear()}
+        </p>
       </footer>
     </div>
   );
