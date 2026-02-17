@@ -14,7 +14,7 @@ interface Media {
   vote_count: number;
 }
 
-export default function BlehflixAresBuild() {
+export default function BlehflixAresPro() {
   const [items, setItems] = useState<Media[]>([]);
   const [searchResults, setSearchResults] = useState<Media[]>([]);
   const [query, setQuery] = useState('');
@@ -54,14 +54,14 @@ export default function BlehflixAresBuild() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // UPDATED: This gateway specifically targets Vidora/Ares servers and avoids the connection error
+  // UPDATED: Multi-Route Gateway
+  // This uses vidsrc.pro which is currently the primary host for the Ares server clusters
   const getStreamUrl = () => {
     if (!activeItem) return "";
-    // vidsrc.xyz is the best gateway to access the Ares/Vidora clusters without connection blocks
     if (type === 'tv') {
-      return `https://vidsrc.xyz/embed/tv?tmdb=${activeItem.id}&season=1&episode=1`;
+      return `https://vidsrc.pro/embed/tv/${activeItem.id}/1/1`;
     }
-    return `https://vidsrc.xyz/embed/movie?tmdb=${activeItem.id}`;
+    return `https://vidsrc.pro/embed/movie/${activeItem.id}`;
   };
 
   const displayItems = query.length > 2 ? searchResults : items;
@@ -70,13 +70,13 @@ export default function BlehflixAresBuild() {
   return (
     <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-red-600">
       
-      {/* NAVIGATION - Kept exactly as your screenshot */}
+      {/* NAVIGATION */}
       <nav className="p-6 flex flex-col md:flex-row justify-between items-center fixed w-full z-50 bg-gradient-to-b from-black/90 to-transparent backdrop-blur-md border-b border-white/5">
         <div className="flex items-center gap-6">
           <h1 onClick={() => {setView('browse'); setQuery('');}} className="text-3xl font-black text-[#E50914] cursor-pointer tracking-tighter hover:scale-105 transition">BLEHFLIX™</h1>
           <div className="flex bg-zinc-900 rounded-full p-1 border border-white/10">
-            <button onClick={() => setType('movie')} className={`px-4 py-1 rounded-full text-[10px] font-black uppercase transition ${type === 'movie' ? 'bg-red-600 text-white shadow-lg shadow-red-600/20' : 'text-zinc-500 hover:text-white'}`}>Movies</button>
-            <button onClick={() => setType('tv')} className={`px-4 py-1 rounded-full text-[10px] font-black uppercase transition ${type === 'tv' ? 'bg-red-600 text-white shadow-lg shadow-red-600/20' : 'text-zinc-500 hover:text-white'}`}>Shows</button>
+            <button onClick={() => setType('movie')} className={`px-4 py-1 rounded-full text-[10px] font-black uppercase transition ${type === 'movie' ? 'bg-red-600 text-white' : 'text-zinc-500'}`}>Movies</button>
+            <button onClick={() => setType('tv')} className={`px-4 py-1 rounded-full text-[10px] font-black uppercase transition ${type === 'tv' ? 'bg-red-600 text-white' : 'text-zinc-500'}`}>Shows</button>
           </div>
         </div>
         
@@ -84,98 +84,85 @@ export default function BlehflixAresBuild() {
           <input 
             type="text" 
             placeholder={`Search ${type === 'movie' ? 'Cinematic Universe' : 'Television Series'}...`}
-            className="w-full bg-zinc-900/80 border border-zinc-800 px-6 py-2 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-red-600 transition-all shadow-inner"
+            className="w-full bg-zinc-900/80 border border-zinc-800 px-6 py-2 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-red-600 transition-all"
             value={query}
             onChange={handleSearch}
           />
         </div>
 
         <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
-          <a href="https://discord.com/invite/NzPpXVurAq" target="_blank" rel="noreferrer" className="hover:text-red-600 transition">Community</a>
+          <span className="text-red-600 animate-pulse">● ARES ACTIVE</span>
+          <a href="https://discord.com/invite/NzPpXVurAq" target="_blank" rel="noreferrer" className="hover:text-white transition">Community</a>
         </div>
       </nav>
 
       {view === 'browse' ? (
         <main className="animate-in fade-in duration-1000">
-          {/* HERO SECTION */}
+          {/* HERO */}
           {currentHero && query.length <= 2 && (
             <div className="relative h-[85vh] w-full flex items-center px-12">
               <img src={`https://image.tmdb.org/t/p/original${currentHero.backdrop_path}`} className="absolute inset-0 w-full h-full object-cover opacity-40" alt="Featured" />
               <div className="absolute inset-0 bg-gradient-to-r from-[#050505] via-[#050505]/60 to-transparent" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#050505] to-transparent" />
               <div className="relative z-10 max-w-3xl pt-20">
-                <div className="flex items-center gap-3 mb-4">
-                    <span className="bg-red-600 text-white px-2 py-0.5 rounded text-[10px] font-black italic uppercase">Ares Server Active</span>
-                    <span className="text-zinc-400 text-xs font-bold tracking-widest uppercase">Global Rank #{heroIndex + 1}</span>
-                </div>
-                <h2 className="text-7xl font-black mb-6 tracking-tighter italic uppercase leading-none drop-shadow-2xl">{currentHero.title || currentHero.name}</h2>
+                <h2 className="text-7xl font-black mb-6 tracking-tighter italic uppercase leading-none">{currentHero.title || currentHero.name}</h2>
                 <p className="text-lg text-zinc-400 mb-8 line-clamp-3 font-light max-w-xl italic">&ldquo;{currentHero.overview}&rdquo;</p>
-                <button onClick={() => openDetails(currentHero)} className="bg-red-600 text-white px-10 py-4 rounded-sm font-black hover:bg-white hover:text-black transition-all uppercase tracking-tighter shadow-xl shadow-red-600/20">Stream Now</button>
+                <button onClick={() => openDetails(currentHero)} className="bg-red-600 text-white px-10 py-4 rounded-sm font-black hover:bg-white hover:text-black transition-all uppercase tracking-tighter">Stream Now</button>
               </div>
             </div>
           )}
 
-          {/* GRID SECTION */}
+          {/* GRID */}
           <div className={`px-12 pb-20 relative z-20 ${query.length <= 2 ? "-mt-24" : "pt-32"}`}>
-            <h3 className="text-xs font-black mb-8 text-zinc-500 uppercase tracking-[0.4em]">
-              {query.length > 2 ? `Search Results` : `Top Trending ${type === 'movie' ? 'Cinema' : 'Television'}`}
-            </h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-8">
               {displayItems.map((item) => (
                 <div key={item.id} onClick={() => openDetails(item)} className="group cursor-pointer">
                   <div className="relative aspect-[2/3] overflow-hidden rounded-sm shadow-2xl transition-all duration-500 group-hover:scale-110 z-0 group-hover:z-10 bg-zinc-900">
-                    <img src={item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : 'https://via.placeholder.com/500x750?text=No+Poster'} className="w-full h-full object-cover" alt={item.title || item.name} />
-                    <div className="absolute inset-0 border border-white/5 group-hover:border-red-600 transition-colors" />
+                    <img src={item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : 'https://via.placeholder.com/500x750'} className="w-full h-full object-cover" alt="Poster" />
                   </div>
-                  <h4 className="mt-4 text-[10px] font-black uppercase tracking-widest text-zinc-400 group-hover:text-red-600 truncate">{item.title || item.name}</h4>
-                  <p className="text-[9px] text-zinc-600 font-bold mt-1 tracking-tighter uppercase">{(item.release_date || item.first_air_date || '').split('-')[0]} • {item.vote_average.toFixed(1)} Rating</p>
+                  <h4 className="mt-4 text-[10px] font-black uppercase tracking-widest text-zinc-400 truncate">{item.title || item.name}</h4>
                 </div>
               ))}
             </div>
           </div>
         </main>
       ) : (
-        /* DETAILS VIEW & PLAYER */
+        /* DETAILS & FIXED PLAYER */
         <main className="animate-in slide-in-from-bottom-10 duration-700 pb-20">
           <div className="relative h-[70vh]">
             <img src={`https://image.tmdb.org/t/p/original${activeItem?.backdrop_path}`} className="w-full h-full object-cover opacity-20" alt="Backdrop" />
             <div className="absolute inset-0 bg-gradient-to-t from-[#050505] to-transparent" />
             <div className="absolute bottom-12 left-12 right-12">
-               <div className="flex flex-wrap gap-4 mb-6">
+               <div className="flex gap-4 mb-6">
                   {activeItem && activeItem.vote_average >= 8.0 && (
-                    <div className="bg-zinc-900/80 border border-zinc-800 px-4 py-2 rounded-sm text-yellow-500 font-black tracking-widest text-xs uppercase animate-pulse">🏆 Absolute Classic</div>
+                    <div className="bg-zinc-900/80 border border-zinc-800 px-4 py-2 rounded-sm text-yellow-500 font-black tracking-widest text-xs uppercase">🏆 Absolute Classic</div>
                   )}
-                  <div className="bg-zinc-900/80 border border-zinc-800 px-4 py-2 rounded-sm"><span className="text-green-500 font-black">{(activeItem?.vote_average! * 10).toFixed(0)}%</span> <span className="text-[10px] uppercase ml-2 text-zinc-500">Match Score</span></div>
                </div>
-               <h2 className="text-8xl font-black mb-6 uppercase italic tracking-tighter leading-none text-white drop-shadow-2xl">{activeItem?.title || activeItem?.name}</h2>
-               <p className="text-xl text-zinc-400 max-w-4xl mb-10 font-light leading-relaxed italic">&ldquo;{activeItem?.overview}&rdquo;</p>
+               <h2 className="text-8xl font-black mb-6 uppercase italic tracking-tighter leading-none">{activeItem?.title || activeItem?.name}</h2>
                <div className="flex gap-4">
-                 <button onClick={() => setIsStreaming(true)} className="bg-red-600 text-white px-12 py-5 rounded-sm font-black uppercase hover:bg-white hover:text-black transition-all shadow-2xl active:scale-95 shadow-red-600/40">Watch Now</button>
+                 <button onClick={() => setIsStreaming(true)} className="bg-red-600 text-white px-12 py-5 rounded-sm font-black uppercase hover:bg-white hover:text-black transition-all">Watch Now</button>
                  <button onClick={() => {setView('browse'); setQuery('');}} className="border border-zinc-700 px-12 py-5 rounded-sm font-black uppercase hover:bg-zinc-800 transition-all">Back to Home</button>
                </div>
             </div>
           </div>
           {isStreaming && (
-            <div className="p-12 bg-black animate-in zoom-in duration-500">
-               <div className="relative w-full aspect-video border-y-2 border-red-600 shadow-[0_0_100px_rgba(229,9,20,0.15)] bg-zinc-900">
+            <div className="p-12 bg-black">
+               <div className="relative w-full aspect-video border-y-2 border-red-600 bg-zinc-900">
+                 {/* The 'key' attribute forces the iframe to refresh completely if you switch movies */}
                  <iframe 
+                    key={activeItem?.id}
                     src={getStreamUrl()} 
                     className="absolute inset-0 w-full h-full" 
                     allowFullScreen 
                     scrolling="no"
                     frameBorder="0"
-                    // These 3 lines are the "magic" that fixes the refused connection
                     allow="autoplay; encrypted-media; picture-in-picture"
-                    referrerPolicy="no-referrer-when-downgrade"
                     sandbox="allow-forms allow-pointer-lock allow-same-origin allow-scripts allow-top-navigation"
                  />
                </div>
                <div className="mt-6 flex flex-col items-center">
                   <p className="text-[10px] text-zinc-700 uppercase tracking-[0.5em] font-black">
-                    Primary Server: Ares • Connection Optimized
-                  </p>
-                  <p className="text-[9px] text-zinc-800 mt-2 italic">
-                    Tip: If Ares doesn't load instantly, click the "Servers" icon in the player corner.
+                    Gateway: Ares Pro-Route • If unavailable, click 'Servers' in player
                   </p>
                </div>
             </div>
@@ -183,9 +170,8 @@ export default function BlehflixAresBuild() {
         </main>
       )}
 
-      {/* FOOTER */}
       <footer className="p-16 border-t border-white/5 bg-black text-center">
-        <p className="text-[10px] text-zinc-800 uppercase tracking-widest font-black">© {new Date().getFullYear()} Blehflix™ • Ares-Powered Node</p>
+        <p className="text-[10px] text-zinc-800 uppercase tracking-widest font-black">© {new Date().getFullYear()} Blehflix™ • Node 0.2.Ares</p>
       </footer>
     </div>
   );
