@@ -14,7 +14,7 @@ interface Media {
   vote_count: number;
 }
 
-export default function BlehflixAresPro() {
+export default function BlehflixAresMaster() {
   const [items, setItems] = useState<Media[]>([]);
   const [searchResults, setSearchResults] = useState<Media[]>([]);
   const [query, setQuery] = useState('');
@@ -23,6 +23,7 @@ export default function BlehflixAresPro() {
   const [activeItem, setActiveItem] = useState<Media | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [heroIndex, setHeroIndex] = useState(0);
+  const [playerKey, setPlayerKey] = useState(0); // For forcing reloads
   
   const API_KEY = "3c08a2b895c3295cc09d583b3fc279cf";
 
@@ -54,14 +55,13 @@ export default function BlehflixAresPro() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // UPDATED: Multi-Route Gateway
-  // This uses vidsrc.pro which is currently the primary host for the Ares server clusters
+  // UPDATED: Using vidsrc.to for maximum Ares compatibility
   const getStreamUrl = () => {
     if (!activeItem) return "";
     if (type === 'tv') {
-      return `https://vidsrc.pro/embed/tv/${activeItem.id}/1/1`;
+      return `https://vidsrc.to/embed/tv/${activeItem.id}/1/1`;
     }
-    return `https://vidsrc.pro/embed/movie/${activeItem.id}`;
+    return `https://vidsrc.to/embed/movie/${activeItem.id}`;
   };
 
   const displayItems = query.length > 2 ? searchResults : items;
@@ -75,8 +75,8 @@ export default function BlehflixAresPro() {
         <div className="flex items-center gap-6">
           <h1 onClick={() => {setView('browse'); setQuery('');}} className="text-3xl font-black text-[#E50914] cursor-pointer tracking-tighter hover:scale-105 transition">BLEHFLIX™</h1>
           <div className="flex bg-zinc-900 rounded-full p-1 border border-white/10">
-            <button onClick={() => setType('movie')} className={`px-4 py-1 rounded-full text-[10px] font-black uppercase transition ${type === 'movie' ? 'bg-red-600 text-white' : 'text-zinc-500'}`}>Movies</button>
-            <button onClick={() => setType('tv')} className={`px-4 py-1 rounded-full text-[10px] font-black uppercase transition ${type === 'tv' ? 'bg-red-600 text-white' : 'text-zinc-500'}`}>Shows</button>
+            <button onClick={() => setType('movie')} className={`px-4 py-1 rounded-full text-[10px] font-black uppercase transition ${type === 'movie' ? 'bg-red-600 text-white shadow-lg shadow-red-600/20' : 'text-zinc-500 hover:text-white'}`}>Movies</button>
+            <button onClick={() => setType('tv')} className={`px-4 py-1 rounded-full text-[10px] font-black uppercase transition ${type === 'tv' ? 'bg-red-600 text-white shadow-lg shadow-red-600/20' : 'text-zinc-500 hover:text-white'}`}>Shows</button>
           </div>
         </div>
         
@@ -84,15 +84,14 @@ export default function BlehflixAresPro() {
           <input 
             type="text" 
             placeholder={`Search ${type === 'movie' ? 'Cinematic Universe' : 'Television Series'}...`}
-            className="w-full bg-zinc-900/80 border border-zinc-800 px-6 py-2 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-red-600 transition-all"
+            className="w-full bg-zinc-900/80 border border-zinc-800 px-6 py-2 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-red-600 transition-all shadow-inner"
             value={query}
             onChange={handleSearch}
           />
         </div>
 
         <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
-          <span className="text-red-600 animate-pulse">● ARES ACTIVE</span>
-          <a href="https://discord.com/invite/NzPpXVurAq" target="_blank" rel="noreferrer" className="hover:text-white transition">Community</a>
+           <span className="text-red-600 animate-pulse">● ARES CLUSTER ONLINE</span>
         </div>
       </nav>
 
@@ -101,13 +100,13 @@ export default function BlehflixAresPro() {
           {/* HERO */}
           {currentHero && query.length <= 2 && (
             <div className="relative h-[85vh] w-full flex items-center px-12">
-              <img src={`https://image.tmdb.org/t/p/original${currentHero.backdrop_path}`} className="absolute inset-0 w-full h-full object-cover opacity-40" alt="Featured" />
+              <img src={`https://image.tmdb.org/t/p/original${currentHero.backdrop_path}`} className="absolute inset-0 w-full h-full object-cover opacity-40 transition-opacity duration-1000" alt="Hero" />
               <div className="absolute inset-0 bg-gradient-to-r from-[#050505] via-[#050505]/60 to-transparent" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#050505] to-transparent" />
               <div className="relative z-10 max-w-3xl pt-20">
-                <h2 className="text-7xl font-black mb-6 tracking-tighter italic uppercase leading-none">{currentHero.title || currentHero.name}</h2>
+                <h2 className="text-7xl font-black mb-6 tracking-tighter italic uppercase leading-none drop-shadow-2xl">{currentHero.title || currentHero.name}</h2>
                 <p className="text-lg text-zinc-400 mb-8 line-clamp-3 font-light max-w-xl italic">&ldquo;{currentHero.overview}&rdquo;</p>
-                <button onClick={() => openDetails(currentHero)} className="bg-red-600 text-white px-10 py-4 rounded-sm font-black hover:bg-white hover:text-black transition-all uppercase tracking-tighter">Stream Now</button>
+                <button onClick={() => openDetails(currentHero)} className="bg-red-600 text-white px-10 py-4 rounded-sm font-black hover:bg-white hover:text-black transition-all uppercase tracking-tighter shadow-xl shadow-red-600/20">Stream Now</button>
               </div>
             </div>
           )}
@@ -119,50 +118,50 @@ export default function BlehflixAresPro() {
                 <div key={item.id} onClick={() => openDetails(item)} className="group cursor-pointer">
                   <div className="relative aspect-[2/3] overflow-hidden rounded-sm shadow-2xl transition-all duration-500 group-hover:scale-110 z-0 group-hover:z-10 bg-zinc-900">
                     <img src={item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : 'https://via.placeholder.com/500x750'} className="w-full h-full object-cover" alt="Poster" />
+                    <div className="absolute inset-0 border border-white/5 group-hover:border-red-600 transition-colors" />
                   </div>
-                  <h4 className="mt-4 text-[10px] font-black uppercase tracking-widest text-zinc-400 truncate">{item.title || item.name}</h4>
+                  <h4 className="mt-4 text-[10px] font-black uppercase tracking-widest text-zinc-400 group-hover:text-red-600 truncate">{item.title || item.name}</h4>
                 </div>
               ))}
             </div>
           </div>
         </main>
       ) : (
-        /* DETAILS & FIXED PLAYER */
+        /* DETAILS & STREAMING */
         <main className="animate-in slide-in-from-bottom-10 duration-700 pb-20">
           <div className="relative h-[70vh]">
             <img src={`https://image.tmdb.org/t/p/original${activeItem?.backdrop_path}`} className="w-full h-full object-cover opacity-20" alt="Backdrop" />
             <div className="absolute inset-0 bg-gradient-to-t from-[#050505] to-transparent" />
             <div className="absolute bottom-12 left-12 right-12">
-               <div className="flex gap-4 mb-6">
-                  {activeItem && activeItem.vote_average >= 8.0 && (
-                    <div className="bg-zinc-900/80 border border-zinc-800 px-4 py-2 rounded-sm text-yellow-500 font-black tracking-widest text-xs uppercase">🏆 Absolute Classic</div>
-                  )}
-               </div>
-               <h2 className="text-8xl font-black mb-6 uppercase italic tracking-tighter leading-none">{activeItem?.title || activeItem?.name}</h2>
+               <h2 className="text-8xl font-black mb-6 uppercase italic tracking-tighter leading-none text-white drop-shadow-2xl">{activeItem?.title || activeItem?.name}</h2>
                <div className="flex gap-4">
-                 <button onClick={() => setIsStreaming(true)} className="bg-red-600 text-white px-12 py-5 rounded-sm font-black uppercase hover:bg-white hover:text-black transition-all">Watch Now</button>
+                 <button onClick={() => setIsStreaming(true)} className="bg-red-600 text-white px-12 py-5 rounded-sm font-black uppercase hover:bg-white hover:text-black transition-all shadow-2xl active:scale-95 shadow-red-600/40">Watch Now</button>
                  <button onClick={() => {setView('browse'); setQuery('');}} className="border border-zinc-700 px-12 py-5 rounded-sm font-black uppercase hover:bg-zinc-800 transition-all">Back to Home</button>
                </div>
             </div>
           </div>
           {isStreaming && (
-            <div className="p-12 bg-black">
-               <div className="relative w-full aspect-video border-y-2 border-red-600 bg-zinc-900">
-                 {/* The 'key' attribute forces the iframe to refresh completely if you switch movies */}
+            <div className="p-12 bg-black animate-in zoom-in duration-500">
+               <div className="relative w-full aspect-video border-y-2 border-red-600 bg-zinc-900 overflow-hidden shadow-[0_0_100px_rgba(229,9,20,0.1)]">
                  <iframe 
-                    key={activeItem?.id}
+                    key={`${activeItem?.id}-${playerKey}`}
                     src={getStreamUrl()} 
                     className="absolute inset-0 w-full h-full" 
                     allowFullScreen 
                     scrolling="no"
                     frameBorder="0"
                     allow="autoplay; encrypted-media; picture-in-picture"
-                    sandbox="allow-forms allow-pointer-lock allow-same-origin allow-scripts allow-top-navigation"
                  />
                </div>
                <div className="mt-6 flex flex-col items-center">
+                  <button 
+                    onClick={() => setPlayerKey(prev => prev + 1)}
+                    className="text-[9px] text-red-600 border border-red-600/30 px-4 py-2 rounded-full hover:bg-red-600 hover:text-white transition uppercase font-black tracking-widest mb-4"
+                  >
+                    Force Reconnect Ares
+                  </button>
                   <p className="text-[10px] text-zinc-700 uppercase tracking-[0.5em] font-black">
-                    Gateway: Ares Pro-Route • If unavailable, click 'Servers' in player
+                    Ares Cluster Secondary Link • Bypassing Unavailable Tags
                   </p>
                </div>
             </div>
@@ -171,7 +170,7 @@ export default function BlehflixAresPro() {
       )}
 
       <footer className="p-16 border-t border-white/5 bg-black text-center">
-        <p className="text-[10px] text-zinc-800 uppercase tracking-widest font-black">© {new Date().getFullYear()} Blehflix™ • Node 0.2.Ares</p>
+        <p className="text-[10px] text-zinc-800 uppercase tracking-widest font-black">© {new Date().getFullYear()} Blehflix™ • Node 0.3.AresMaster</p>
       </footer>
     </div>
   );
