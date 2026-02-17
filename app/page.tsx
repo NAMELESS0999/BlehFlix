@@ -137,12 +137,22 @@ export default function BlehflixProductionBuild() {
             </div>
           </div>
           {isStreaming && (
-            <div className="p-12 bg-black animate-in zoom-in duration-500">
-               <div className="relative w-full aspect-video border-y-2 border-red-600 shadow-[0_0_100px_rgba(229,9,20,0.15)] bg-zinc-900">
-                 <iframe src={`https://vidsrc.xyz/embed/movie/${activeMovie?.id}`} className="absolute inset-0 w-full h-full" allowFullScreen />
-               </div>
-            </div>
-          )}
+  <div className="p-12 bg-black animate-in zoom-in duration-500">
+     <div className="relative w-full aspect-video border-y-2 border-red-600 shadow-[0_0_100px_rgba(229,9,20,0.15)] bg-zinc-900">
+       {/* UPDATED TO VIDORA PLAYER */}
+       <iframe 
+         src={`https://watch.vidora.su/embed/movie/${activeMovie?.id}`} 
+         className="absolute inset-0 w-full h-full" 
+         allowFullScreen 
+         scrolling="no"
+         frameBorder="0"
+       />
+     </div>
+     <p className="text-center text-[10px] text-zinc-700 mt-4 uppercase tracking-widest font-black">
+       Source: Vidora Professional Streaming • Secure Link
+     </p>
+  </div>
+)}
         </main>
       )}
 
