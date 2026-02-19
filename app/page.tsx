@@ -1,7 +1,6 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 
-// This part tells the computer what a "Movie" or "Show" looks like
 interface Media {
   id: number;
   title?: string;
@@ -15,7 +14,7 @@ interface Media {
   vote_count: number;
 }
 
-export default function BlehflixFinalMaster() {
+export default function BlehflixSuperEmbed() {
   const [items, setItems] = useState<Media[]>([]);
   const [searchResults, setSearchResults] = useState<Media[]>([]);
   const [query, setQuery] = useState('');
@@ -25,9 +24,12 @@ export default function BlehflixFinalMaster() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [heroIndex, setHeroIndex] = useState(0);
   
+  // 0 = Ares (SuperEmbed), 1 = Backup (VidLink)
+  const [sourceMode, setSourceMode] = useState<0 | 1>(0); 
+  const [playerKey, setPlayerKey] = useState(0); // Forces player refresh
+  
   const API_KEY = "3c08a2b895c3295cc09d583b3fc279cf";
 
-  // This fetches the movies when the page loads
   useEffect(() => {
     fetch(`https://api.themoviedb.org/3/${type}/top_rated?api_key=${API_KEY}&language=en-US&page=1`)
       .then(res => res.json())
@@ -53,18 +55,29 @@ export default function BlehflixFinalMaster() {
     setActiveItem(item);
     setView('details');
     setIsStreaming(false);
+    setSourceMode(0); // Reset to primary Ares source
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // THE FIX: This link goes ONLY to Vidora servers. No vidsrc allowed.
+  // 🔥 THE MAGIC SAUCE: Direct SuperEmbed Integration
   const getStreamUrl = () => {
     if (!activeItem) return "";
-    if (type === 'tv') {
-      // Direct Vidora link for TV (Season 1, Episode 1)
-      return `https://vidora.pro/embed/tv/${activeItem.id}/1/1`;
+    
+    // Source 0: SuperEmbed (The real "Ares")
+    if (sourceMode === 0) {
+      if (type === 'tv') {
+        return `https://embed.su/embed/tv/${activeItem.id}/1/1`;
+      }
+      return `https://embed.su/embed/movie/${activeItem.id}`;
+    } 
+    
+    // Source 1: VidLink (High-Speed Backup)
+    else {
+       if (type === 'tv') {
+        return `https://vidlink.pro/tv/${activeItem.id}/1/1`;
+      }
+      return `https://vidlink.pro/movie/${activeItem.id}`;
     }
-    // Direct Vidora link for Movies
-    return `https://vidora.pro/embed/movie/${activeItem.id}`;
   };
 
   const displayItems = query.length > 2 ? searchResults : items;
@@ -73,7 +86,7 @@ export default function BlehflixFinalMaster() {
   return (
     <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-red-600">
       
-      {/* HEADER SECTION */}
+      {/* NAVIGATION */}
       <nav className="p-6 flex flex-col md:flex-row justify-between items-center fixed w-full z-50 bg-gradient-to-b from-black/90 to-transparent backdrop-blur-md border-b border-white/5">
         <div className="flex items-center gap-6">
           <h1 onClick={() => {setView('browse'); setQuery('');}} className="text-3xl font-black text-[#E50914] cursor-pointer tracking-tighter hover:scale-105 transition">BLEHFLIX™</h1>
@@ -94,19 +107,23 @@ export default function BlehflixFinalMaster() {
         </div>
 
         <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
-           <span className="text-red-600 animate-pulse">● VIDORA ACTIVE</span>
+           <span className="text-blue-500 animate-pulse">● ARES (SUPER) CONNECTED</span>
         </div>
       </nav>
 
       {view === 'browse' ? (
         <main className="animate-in fade-in duration-1000">
-          {/* FEATURED HERO */}
+          {/* HERO */}
           {currentHero && query.length <= 2 && (
             <div className="relative h-[85vh] w-full flex items-center px-12">
               <img src={`https://image.tmdb.org/t/p/original${currentHero.backdrop_path}`} className="absolute inset-0 w-full h-full object-cover opacity-40" alt="Hero" />
               <div className="absolute inset-0 bg-gradient-to-r from-[#050505] via-[#050505]/60 to-transparent" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#050505] to-transparent" />
               <div className="relative z-10 max-w-3xl pt-20">
+                <div className="flex gap-2 mb-4">
+                     <span className="bg-blue-600 text-white px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest">Ares Source</span>
+                     <span className="bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest">Direct Link</span>
+                </div>
                 <h2 className="text-7xl font-black mb-6 tracking-tighter italic uppercase leading-none drop-shadow-2xl">{currentHero.title || currentHero.name}</h2>
                 <p className="text-lg text-zinc-400 mb-8 line-clamp-3 font-light max-w-xl italic">&ldquo;{currentHero.overview}&rdquo;</p>
                 <button onClick={() => openDetails(currentHero)} className="bg-red-600 text-white px-10 py-4 rounded-sm font-black hover:bg-white hover:text-black transition-all uppercase tracking-tighter shadow-xl shadow-red-600/20">Stream Now</button>
@@ -114,7 +131,7 @@ export default function BlehflixFinalMaster() {
             </div>
           )}
 
-          {/* MOVIE GRID */}
+          {/* GRID */}
           <div className={`px-12 pb-20 relative z-20 ${query.length <= 2 ? "-mt-24" : "pt-32"}`}>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-8">
               {displayItems.map((item) => (
@@ -130,37 +147,54 @@ export default function BlehflixFinalMaster() {
           </div>
         </main>
       ) : (
-        /* VIDEO PLAYER VIEW */
+        /* PLAYER & DETAILS */
         <main className="animate-in slide-in-from-bottom-10 duration-700 pb-20">
           <div className="relative h-[60vh]">
             <img src={`https://image.tmdb.org/t/p/original${activeItem?.backdrop_path}`} className="w-full h-full object-cover opacity-20" alt="Backdrop" />
             <div className="absolute inset-0 bg-gradient-to-t from-[#050505] to-transparent" />
             <div className="absolute bottom-12 left-12 right-12 text-center md:text-left">
-               <h2 className="text-6xl md:text-8xl font-black mb-6 uppercase italic tracking-tighter leading-none text-white drop-shadow-2xl">{activeItem?.title || activeItem?.name}</h2>
+               <h2 className="text-5xl md:text-8xl font-black mb-6 uppercase italic tracking-tighter leading-none text-white drop-shadow-2xl">{activeItem?.title || activeItem?.name}</h2>
                <div className="flex gap-4 justify-center md:justify-start">
-                 <button onClick={() => setIsStreaming(true)} className="bg-red-600 text-white px-12 py-5 rounded-sm font-black uppercase hover:bg-white hover:text-black transition-all shadow-2xl active:scale-95 shadow-red-600/40">Launch Stream</button>
+                 <button onClick={() => setIsStreaming(true)} className="bg-red-600 text-white px-12 py-5 rounded-sm font-black uppercase hover:bg-white hover:text-black transition-all shadow-2xl active:scale-95 shadow-red-600/40">Start Stream</button>
                  <button onClick={() => {setView('browse'); setQuery('');}} className="border border-zinc-700 px-12 py-5 rounded-sm font-black uppercase hover:bg-zinc-800 transition-all">Back</button>
                </div>
             </div>
           </div>
-          
           {isStreaming && (
             <div className="px-6 md:px-12 bg-black animate-in zoom-in duration-500">
-               <div className="relative w-full aspect-video border-y-2 border-red-600 bg-zinc-900 overflow-hidden shadow-[0_0_100px_rgba(229,9,20,0.1)]">
-                 {/* NO SANDBOX = NO ERROR. ReferrerPolicy helps stop pop-ups. */}
+               {/* Controls Bar */}
+               <div className="flex justify-between items-center bg-zinc-900 text-zinc-400 px-4 py-2 text-[10px] uppercase font-bold tracking-widest border-t-2 border-red-600">
+                  <span>Server: {sourceMode === 0 ? 'Ares Primary (Super)' : 'Ares Backup (VidLink)'}</span>
+                  <button 
+                    onClick={() => {
+                        setSourceMode(prev => prev === 0 ? 1 : 0);
+                        setPlayerKey(k => k + 1); // Force Reload
+                    }}
+                    className="hover:text-white text-red-500"
+                  >
+                    Click to Switch Server ⇄
+                  </button>
+               </div>
+
+               <div className="relative w-full aspect-video bg-zinc-900 overflow-hidden shadow-[0_0_100px_rgba(229,9,20,0.1)]">
+                 {/* DIRECT SUPEREMBED / VIDLINK CONNECTION
+                     No "sandbox" attribute = No "Access Denied" errors.
+                     referrerPolicy="origin" = Fewer ads.
+                 */}
                  <iframe 
+                    key={`${activeItem?.id}-${sourceMode}-${playerKey}`}
                     src={getStreamUrl()} 
                     className="absolute inset-0 w-full h-full" 
                     allowFullScreen 
                     scrolling="no"
                     frameBorder="0"
-                    referrerPolicy="no-referrer"
+                    referrerPolicy="origin"
                     allow="autoplay; encrypted-media; picture-in-picture"
                  />
                </div>
                <div className="mt-4 text-center">
-                  <p className="text-[10px] text-zinc-700 uppercase tracking-[0.5em] font-black">
-                    Connected to Vidora Cluster • Ares Node
+                  <p className="text-[10px] text-zinc-600 uppercase tracking-[0.5em] font-black">
+                    Direct Stream Connection • No Middle-Man
                   </p>
                </div>
             </div>
@@ -169,7 +203,7 @@ export default function BlehflixFinalMaster() {
       )}
 
       <footer className="p-16 border-t border-white/5 bg-black text-center">
-        <p className="text-[10px] text-zinc-800 uppercase tracking-widest font-black">© {new Date().getFullYear()} Blehflix™ • Vidora-Ready Build</p>
+        <p className="text-[10px] text-zinc-800 uppercase tracking-widest font-black">© {new Date().getFullYear()} Blehflix™ • Ares Direct Protocol</p>
       </footer>
     </div>
   );
