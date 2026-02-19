@@ -1,210 +1,125 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 
-interface Media {
-  id: number;
-  title?: string;
-  name?: string;
-  poster_path: string;
-  backdrop_path: string;
-  overview: string;
-  release_date?: string;
-  first_air_date?: string;
-  vote_average: number;
-  vote_count: number;
-}
+// TMDB API Key (Keeping yours from the original)
+const API_KEY = "3c08a2b895c3295cc09d583b3fc279cf";
 
-export default function BlehflixSuperEmbed() {
-  const [items, setItems] = useState<Media[]>([]);
-  const [searchResults, setSearchResults] = useState<Media[]>([]);
+export default function BlehflixAres() {
+  const [items, setItems] = useState<any[]>([]);
   const [query, setQuery] = useState('');
   const [type, setType] = useState<'movie' | 'tv'>('movie');
   const [view, setView] = useState<'browse' | 'details'>('browse');
-  const [activeItem, setActiveItem] = useState<Media | null>(null);
+  const [activeItem, setActiveItem] = useState<any | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
-  const [heroIndex, setHeroIndex] = useState(0);
-  
-  // 0 = Ares (SuperEmbed), 1 = Backup (VidLink)
-  const [sourceMode, setSourceMode] = useState<0 | 1>(0); 
-  const [playerKey, setPlayerKey] = useState(0); // Forces player refresh
-  
-  const API_KEY = "3c08a2b895c3295cc09d583b3fc279cf";
+  const [server, setServer] = useState<'vidsrc' | 'vidlink'>('vidsrc');
 
   useEffect(() => {
     fetch(`https://api.themoviedb.org/3/${type}/top_rated?api_key=${API_KEY}&language=en-US&page=1`)
       .then(res => res.json())
-      .then(data => {
-        setItems(data.results || []);
-        setHeroIndex(0);
-      });
+      .then(data => setItems(data.results || []));
   }, [type]);
 
-  const handleSearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSearch = async (e: any) => {
     const term = e.target.value;
     setQuery(term);
     if (term.length > 2) {
       const res = await fetch(`https://api.themoviedb.org/3/search/${type}?api_key=${API_KEY}&query=${term}`);
       const data = await res.json();
-      setSearchResults(data.results || []);
-    } else {
-      setSearchResults([]);
+      setItems(data.results || []);
     }
   };
 
-  const openDetails = (item: Media) => {
-    setActiveItem(item);
-    setView('details');
-    setIsStreaming(false);
-    setSourceMode(0); // Reset to primary Ares source
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  // 🔥 THE MAGIC SAUCE: Direct SuperEmbed Integration
+  // 🔥 THE FIX: Use the stable 2026 Ares clusters
   const getStreamUrl = () => {
     if (!activeItem) return "";
     
-    // Source 0: SuperEmbed (The real "Ares")
-    if (sourceMode === 0) {
-      if (type === 'tv') {
-        return `https://embed.su/embed/tv/${activeItem.id}/1/1`;
-      }
-      return `https://embed.su/embed/movie/${activeItem.id}`;
+    // vidsrc.cc is the current most stable "Ares" provider
+    if (server === 'vidsrc') {
+      return type === 'movie' 
+        ? `https://vidsrc.cc/v2/embed/movie/${activeItem.id}`
+        : `https://vidsrc.cc/v2/embed/tv/${activeItem.id}/1/1`;
     } 
-    
-    // Source 1: VidLink (High-Speed Backup)
+    // vidlink.pro is the "Ares" backup (super fast)
     else {
-       if (type === 'tv') {
-        return `https://vidlink.pro/tv/${activeItem.id}/1/1`;
-      }
-      return `https://vidlink.pro/movie/${activeItem.id}`;
+      return type === 'movie'
+        ? `https://vidlink.pro/movie/${activeItem.id}`
+        : `https://vidlink.pro/tv/${activeItem.id}/1/1`;
     }
   };
 
-  const displayItems = query.length > 2 ? searchResults : items;
-  const currentHero = items[heroIndex];
-
   return (
-    <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-red-600">
-      
-      {/* NAVIGATION */}
-      <nav className="p-6 flex flex-col md:flex-row justify-between items-center fixed w-full z-50 bg-gradient-to-b from-black/90 to-transparent backdrop-blur-md border-b border-white/5">
-        <div className="flex items-center gap-6">
-          <h1 onClick={() => {setView('browse'); setQuery('');}} className="text-3xl font-black text-[#E50914] cursor-pointer tracking-tighter hover:scale-105 transition">BLEHFLIX™</h1>
-          <div className="flex bg-zinc-900 rounded-full p-1 border border-white/10">
-            <button onClick={() => setType('movie')} className={`px-4 py-1 rounded-full text-[10px] font-black uppercase transition ${type === 'movie' ? 'bg-red-600 text-white shadow-lg shadow-red-600/20' : 'text-zinc-500 hover:text-white'}`}>Movies</button>
-            <button onClick={() => setType('tv')} className={`px-4 py-1 rounded-full text-[10px] font-black uppercase transition ${type === 'tv' ? 'bg-red-600 text-white shadow-lg shadow-red-600/20' : 'text-zinc-500 hover:text-white'}`}>Shows</button>
-          </div>
-        </div>
-        
-        <div className="flex flex-1 justify-center max-w-md w-full px-4 my-4 md:my-0">
+    <div className="min-h-screen bg-black text-white font-sans selection:bg-red-600">
+      {/* HEADER */}
+      <nav className="p-4 flex flex-col md:flex-row justify-between items-center fixed w-full z-50 bg-black/80 backdrop-blur-md border-b border-white/10">
+        <h1 onClick={() => setView('browse')} className="text-2xl font-black text-red-600 cursor-pointer">BLEHFLIX™</h1>
+        <div className="flex gap-4 my-2 md:my-0">
           <input 
             type="text" 
-            placeholder={`Search ${type === 'movie' ? 'Cinematic Universe' : 'Television Series'}...`}
-            className="w-full bg-zinc-900/80 border border-zinc-800 px-6 py-2 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-red-600 transition-all shadow-inner"
-            value={query}
-            onChange={handleSearch}
+            placeholder="Search..." 
+            className="bg-zinc-900 border border-zinc-800 px-4 py-1 rounded-full text-sm outline-none" 
+            onChange={handleSearch} 
           />
-        </div>
-
-        <div className="hidden lg:flex gap-8 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
-           <span className="text-blue-500 animate-pulse">● ARES (SUPER) CONNECTED</span>
+          <select 
+            className="bg-zinc-900 text-xs px-2 rounded-full border border-zinc-700"
+            onChange={(e) => setType(e.target.value as any)}
+          >
+            <option value="movie">Movies</option>
+            <option value="tv">TV Shows</option>
+          </select>
         </div>
       </nav>
 
       {view === 'browse' ? (
-        <main className="animate-in fade-in duration-1000">
-          {/* HERO */}
-          {currentHero && query.length <= 2 && (
-            <div className="relative h-[85vh] w-full flex items-center px-12">
-              <img src={`https://image.tmdb.org/t/p/original${currentHero.backdrop_path}`} className="absolute inset-0 w-full h-full object-cover opacity-40" alt="Hero" />
-              <div className="absolute inset-0 bg-gradient-to-r from-[#050505] via-[#050505]/60 to-transparent" />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#050505] to-transparent" />
-              <div className="relative z-10 max-w-3xl pt-20">
-                <div className="flex gap-2 mb-4">
-                     <span className="bg-blue-600 text-white px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest">Ares Source</span>
-                     <span className="bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest">Direct Link</span>
-                </div>
-                <h2 className="text-7xl font-black mb-6 tracking-tighter italic uppercase leading-none drop-shadow-2xl">{currentHero.title || currentHero.name}</h2>
-                <p className="text-lg text-zinc-400 mb-8 line-clamp-3 font-light max-w-xl italic">&ldquo;{currentHero.overview}&rdquo;</p>
-                <button onClick={() => openDetails(currentHero)} className="bg-red-600 text-white px-10 py-4 rounded-sm font-black hover:bg-white hover:text-black transition-all uppercase tracking-tighter shadow-xl shadow-red-600/20">Stream Now</button>
-              </div>
+        <main className="pt-24 px-8 grid grid-cols-2 md:grid-cols-5 gap-6">
+          {items.map(item => (
+            <div key={item.id} onClick={() => {setActiveItem(item); setView('details'); setIsStreaming(false);}} className="group cursor-pointer">
+              <img src={`https://image.tmdb.org/t/p/w500${item.poster_path}`} className="rounded-lg hover:scale-105 transition border border-white/5 group-hover:border-red-600" />
+              <p className="mt-2 text-[10px] uppercase font-bold text-zinc-500 truncate">{item.title || item.name}</p>
             </div>
-          )}
-
-          {/* GRID */}
-          <div className={`px-12 pb-20 relative z-20 ${query.length <= 2 ? "-mt-24" : "pt-32"}`}>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-8">
-              {displayItems.map((item) => (
-                <div key={item.id} onClick={() => openDetails(item)} className="group cursor-pointer">
-                  <div className="relative aspect-[2/3] overflow-hidden rounded-sm shadow-2xl transition-all duration-500 group-hover:scale-110 z-0 group-hover:z-10 bg-zinc-900">
-                    <img src={item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : 'https://via.placeholder.com/500x750'} className="w-full h-full object-cover" alt="Poster" />
-                    <div className="absolute inset-0 border border-white/5 group-hover:border-red-600 transition-colors" />
-                  </div>
-                  <h4 className="mt-4 text-[10px] font-black uppercase tracking-widest text-zinc-400 group-hover:text-red-600 truncate">{item.title || item.name}</h4>
-                </div>
-              ))}
-            </div>
-          </div>
+          ))}
         </main>
       ) : (
-        /* PLAYER & DETAILS */
-        <main className="animate-in slide-in-from-bottom-10 duration-700 pb-20">
-          <div className="relative h-[60vh]">
-            <img src={`https://image.tmdb.org/t/p/original${activeItem?.backdrop_path}`} className="w-full h-full object-cover opacity-20" alt="Backdrop" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#050505] to-transparent" />
-            <div className="absolute bottom-12 left-12 right-12 text-center md:text-left">
-               <h2 className="text-5xl md:text-8xl font-black mb-6 uppercase italic tracking-tighter leading-none text-white drop-shadow-2xl">{activeItem?.title || activeItem?.name}</h2>
-               <div className="flex gap-4 justify-center md:justify-start">
-                 <button onClick={() => setIsStreaming(true)} className="bg-red-600 text-white px-12 py-5 rounded-sm font-black uppercase hover:bg-white hover:text-black transition-all shadow-2xl active:scale-95 shadow-red-600/40">Start Stream</button>
-                 <button onClick={() => {setView('browse'); setQuery('');}} className="border border-zinc-700 px-12 py-5 rounded-sm font-black uppercase hover:bg-zinc-800 transition-all">Back</button>
-               </div>
-            </div>
-          </div>
-          {isStreaming && (
-            <div className="px-6 md:px-12 bg-black animate-in zoom-in duration-500">
-               {/* Controls Bar */}
-               <div className="flex justify-between items-center bg-zinc-900 text-zinc-400 px-4 py-2 text-[10px] uppercase font-bold tracking-widest border-t-2 border-red-600">
-                  <span>Server: {sourceMode === 0 ? 'Ares Primary (Super)' : 'Ares Backup (VidLink)'}</span>
+        <main className="pt-24 px-4 flex flex-col items-center">
+          <button onClick={() => setView('browse')} className="mb-4 text-xs text-zinc-500 hover:text-white">← BACK TO BROWSE</button>
+          <h2 className="text-4xl font-black mb-6 italic uppercase">{activeItem?.title || activeItem?.name}</h2>
+          
+          <div className="w-full max-w-5xl">
+            {isStreaming ? (
+              <div className="animate-in fade-in zoom-in duration-500">
+                <div className="flex gap-2 mb-2">
                   <button 
-                    onClick={() => {
-                        setSourceMode(prev => prev === 0 ? 1 : 0);
-                        setPlayerKey(k => k + 1); // Force Reload
-                    }}
-                    className="hover:text-white text-red-500"
+                    onClick={() => setServer('vidsrc')} 
+                    className={`text-[10px] px-3 py-1 rounded ${server === 'vidsrc' ? 'bg-red-600 text-white' : 'bg-zinc-800 text-zinc-500'}`}
                   >
-                    Click to Switch Server ⇄
+                    ARES PRIMARY
                   </button>
-               </div>
-
-               <div className="relative w-full aspect-video bg-zinc-900 overflow-hidden shadow-[0_0_100px_rgba(229,9,20,0.1)]">
-                 {/* DIRECT SUPEREMBED / VIDLINK CONNECTION
-                     No "sandbox" attribute = No "Access Denied" errors.
-                     referrerPolicy="origin" = Fewer ads.
-                 */}
-                 <iframe 
-                    key={`${activeItem?.id}-${sourceMode}-${playerKey}`}
+                  <button 
+                    onClick={() => setServer('vidlink')} 
+                    className={`text-[10px] px-3 py-1 rounded ${server === 'vidlink' ? 'bg-blue-600 text-white' : 'bg-zinc-800 text-zinc-500'}`}
+                  >
+                    ARES BACKUP
+                  </button>
+                </div>
+                <div className="aspect-video bg-zinc-900 border-2 border-red-600 rounded-lg overflow-hidden shadow-2xl shadow-red-600/10">
+                  <iframe 
                     src={getStreamUrl()} 
-                    className="absolute inset-0 w-full h-full" 
+                    className="w-full h-full" 
                     allowFullScreen 
-                    scrolling="no"
-                    frameBorder="0"
                     referrerPolicy="origin"
-                    allow="autoplay; encrypted-media; picture-in-picture"
-                 />
-               </div>
-               <div className="mt-4 text-center">
-                  <p className="text-[10px] text-zinc-600 uppercase tracking-[0.5em] font-black">
-                    Direct Stream Connection • No Middle-Man
-                  </p>
-               </div>
-            </div>
-          )}
+                  />
+                </div>
+              </div>
+            ) : (
+              <button 
+                onClick={() => setIsStreaming(true)} 
+                className="w-full py-20 bg-zinc-900 rounded-lg border-2 border-dashed border-zinc-700 hover:border-red-600 group transition-all"
+              >
+                <span className="text-zinc-500 group-hover:text-red-600 font-black uppercase tracking-widest">Connect to Stream Node</span>
+              </button>
+            )}
+          </div>
         </main>
       )}
-
-      <footer className="p-16 border-t border-white/5 bg-black text-center">
-        <p className="text-[10px] text-zinc-800 uppercase tracking-widest font-black">© {new Date().getFullYear()} Blehflix™ • Ares Direct Protocol</p>
-      </footer>
     </div>
   );
 }
