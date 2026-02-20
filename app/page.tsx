@@ -149,10 +149,10 @@ export default function BlehflixPantheon() {
               
               <div className="relative z-10 max-w-4xl pt-20 space-y-6">
                 <div className="flex gap-3 animate-in slide-in-from-left duration-1000 items-center">
-                    {/* ABSOLUTE CLASSIC BADGE */}
+                    {/* ABSOLUTE Cinema BADGE */}
                     {currentHero.vote_average > 8.0 && (
                         <span className="bg-yellow-500 text-black px-3 py-1 rounded-sm text-[10px] font-black uppercase tracking-widest shadow-[0_0_20px_#eab308] animate-pulse">
-                            🏆 Absolute Classic
+                            🏆 Absolute Cinema
                         </span>
                     )}
                     <span className="bg-white/10 backdrop-blur-md border border-white/10 text-white px-3 py-1 rounded-sm text-[10px] font-black uppercase tracking-widest">
@@ -183,10 +183,10 @@ export default function BlehflixPantheon() {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-6">
               {displayItems.map((item) => (
                 <div key={item.id} onClick={() => openDetails(item)} className="group cursor-pointer relative flex flex-col">
-                  {/* CLASSIC BADGE FOR GRID */}
+                  {/* Peak BADGE FOR GRID */}
                   {item.vote_average > 8.0 && (
                       <div className="absolute -top-2 -right-2 z-50 bg-yellow-500 text-black text-[8px] font-black px-2 py-1 rounded shadow-[0_0_10px_#eab308] uppercase rotate-3">
-                          Classic
+                          Peak
                       </div>
                   )}
                   <div className="relative aspect-[2/3] overflow-hidden rounded-md shadow-2xl transition-all duration-300 group-hover:scale-105 group-hover:-translate-y-2 z-0 group-hover:z-40 bg-zinc-900 ring-1 ring-white/10 group-hover:ring-red-600 group-hover:shadow-[0_10px_30px_rgba(229,9,20,0.3)]">
@@ -227,7 +227,7 @@ export default function BlehflixPantheon() {
                    <img src={`https://image.tmdb.org/t/p/w500${activeItem?.poster_path}`} className="w-64 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] border border-white/10 group-hover:border-red-600 transition duration-500 group-hover:-translate-y-4" />
                    {activeItem && activeItem.vote_average > 8.0 && (
                        <div className="absolute -top-4 -right-4 bg-yellow-500 text-black text-xs font-black px-4 py-2 rounded shadow-[0_0_20px_#eab308] uppercase rotate-6 z-50 animate-bounce">
-                           Absolute Classic
+                           Absolute Cinema
                        </div>
                    )}
                </div>
