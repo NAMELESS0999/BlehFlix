@@ -6,13 +6,7 @@ module.exports = {
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
-    extend: {
-      animation: {
-        'pulse': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-      }
-    },
+    extend: {},
   },
-  plugins: [
-    require("tailwindcss-animate"), // This handles the fade-in/slide-in effects
-  ],
+  plugins: [], // We removed the broken plugin here
 }
