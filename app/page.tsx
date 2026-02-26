@@ -29,6 +29,7 @@ export default function BlehflixPeak() {
   const [activeItem, setActiveItem] = useState<any | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [isProxyEnabled, setIsProxyEnabled] = useState(false);
+  const [isAdBlockerEnabled, setIsAdBlockerEnabled] = useState(false); // New Ad-Blocker State
   
   const [season, setSeason] = useState(1);
   const [episode, setEpisode] = useState(1);
@@ -36,7 +37,6 @@ export default function BlehflixPeak() {
 
   const API_KEY = "3c08a2b895c3295cc09d583b3fc279cf";
 
-  // New Lively Startup Animation Timing
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 3500);
     return () => clearTimeout(timer);
@@ -81,11 +81,9 @@ export default function BlehflixPeak() {
   if (loading) {
     return (
       <div className="fixed inset-0 bg-[#050505] flex items-center justify-center z-[100] overflow-hidden">
-        {/* Animated Background Stripes */}
         <div className="absolute inset-0 opacity-10" 
              style={{ backgroundImage: 'repeating-linear-gradient(45deg, #000 25%, transparent 25%, transparent 75%, #000 75%, #000), repeating-linear-gradient(45deg, #000 25%, transparent 25%, transparent 75%, #000 75%, #000)', backgroundSize: '40px 40px', backgroundPosition: '0 0, 20px 20px', animation: 'slide 20s linear infinite' }} 
         />
-        {/* Animated Pinging "Stars" */}
         <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-white rounded-full animate-ping" />
         <div className="absolute top-1/3 right-1/4 w-1 h-1 bg-white rounded-full animate-ping delay-100" />
         <div className="absolute bottom-1/4 left-1/3 w-3 h-3 bg-red-600 rounded-full animate-ping delay-300" />
@@ -101,7 +99,6 @@ export default function BlehflixPeak() {
   return (
     <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-red-600">
       
-      {/* LIVELY NAV */}
       <nav className="p-4 md:p-6 flex flex-col lg:flex-row justify-between items-center fixed w-full z-50 bg-black/80 backdrop-blur-2xl border-b border-white/5 gap-4 transition-all duration-300">
         <div className="flex items-center justify-between w-full lg:w-auto gap-8">
           <h1 onClick={() => {setView('browse'); setQuery(''); setIsStreaming(false);}} className="text-3xl md:text-4xl font-black text-[#E50914] cursor-pointer tracking-tighter hover:scale-105 hover:drop-shadow-[0_0_15px_rgba(229,9,20,0.8)] transition-all duration-300">BLEHFLIX™</h1>
@@ -118,7 +115,6 @@ export default function BlehflixPeak() {
 
       {view === 'browse' ? (
         <main className="pt-32 lg:pt-0">
-          {/* HERO SECTION */}
           {items[0] && query.length <= 2 && (
             <div className="relative h-[65vh] md:h-[85vh] w-full flex items-center px-6 md:px-16 overflow-hidden mb-8 group">
               <img src={`https://image.tmdb.org/t/p/original${items[0].backdrop_path}`} className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:scale-105 transition-transform duration-1000" alt="hero" />
@@ -137,7 +133,6 @@ export default function BlehflixPeak() {
             </div>
           )}
 
-          {/* FLUID GRID */}
           <div className="px-4 md:px-8 xl:px-16 pb-24">
             <h3 className="text-xl md:text-2xl font-black mb-8 uppercase tracking-tighter border-l-4 border-red-600 pl-4">Trending Peak</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-4 md:gap-6">
@@ -157,14 +152,12 @@ export default function BlehflixPeak() {
           </div>
         </main>
       ) : (
-        /* --- RICH DETAILS PAGE --- */
         <main className="pt-32 pb-20 px-4 md:px-8 xl:px-16 max-w-[100rem] mx-auto">
           <button onClick={() => setView('browse')} className="mb-8 text-[11px] font-black uppercase text-zinc-500 hover:text-white tracking-[0.2em] flex items-center gap-2 hover:-translate-x-2 transition-transform duration-300">
             <span className="text-xl leading-none">←</span> Return to Lobby
           </button>
           
           <div className="flex flex-col lg:flex-row gap-8 xl:gap-16">
-            {/* Left Info Column */}
             <div className="w-full lg:w-1/3 xl:w-1/4 flex flex-col gap-6">
                <div className="relative rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.8)] border border-white/10 group">
                  <img src={`https://image.tmdb.org/t/p/w500${activeItem?.poster_path}`} className="w-full object-cover group-hover:scale-105 transition-transform duration-700" />
@@ -177,14 +170,12 @@ export default function BlehflixPeak() {
                </div>
             </div>
             
-            {/* Right Action Column */}
             <div className="flex-1 space-y-8">
                <div className="space-y-4">
                   <h2 className="text-4xl md:text-6xl xl:text-8xl font-black uppercase italic tracking-tighter leading-none text-transparent bg-clip-text bg-gradient-to-br from-white to-zinc-500 drop-shadow-lg">
                     {activeItem?.title || activeItem?.name}
                   </h2>
                   
-                  {/* Detailed Metadata Row */}
                   <div className="flex flex-wrap items-center gap-4 text-xs font-bold uppercase">
                     <span className="text-yellow-500 flex items-center gap-1 text-sm bg-yellow-500/10 px-3 py-1 rounded-full border border-yellow-500/20">
                       ★ {activeItem?.vote_average.toFixed(1)}
@@ -195,7 +186,6 @@ export default function BlehflixPeak() {
                     <span className="text-zinc-400">Lang: <span className="text-white">{activeItem?.original_language}</span></span>
                   </div>
 
-                  {/* Dynamic Genre Tags */}
                   <div className="flex flex-wrap gap-2 pt-2">
                     {activeItem?.genre_ids?.map((id: number) => GENRES[id] ? (
                       <span key={id} className="bg-zinc-800/80 text-zinc-300 border border-zinc-700 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider hover:bg-white hover:text-black transition-colors cursor-default">
@@ -212,7 +202,6 @@ export default function BlehflixPeak() {
                     </button>
                   ) : (
                     <div className="space-y-4 animate-in fade-in duration-500">
-                       {/* Control Panel */}
                        <div className="flex flex-col xl:flex-row gap-4 bg-zinc-900/80 p-4 rounded-xl border border-white/5 justify-between items-center shadow-inner shadow-black/50">
                           <div className="flex flex-wrap gap-2 justify-center">
                              {Object.keys(ENCODED_DOMAINS).map(key => (
@@ -222,13 +211,21 @@ export default function BlehflixPeak() {
                              ))}
                           </div>
 
-                          <div className="flex items-center gap-3">
-                             {/* GHOST MODE */}
+                          <div className="flex flex-wrap items-center justify-center gap-3">
+                             {/* AD-BLOCKER TOGGLE */}
+                             <button 
+                                onClick={() => setIsAdBlockerEnabled(!isAdBlockerEnabled)} 
+                                className={`px-5 py-2.5 text-[9px] font-black uppercase rounded-full border transition-all duration-300 shadow-lg ${isAdBlockerEnabled ? 'bg-blue-600/20 border-blue-500 text-blue-400 shadow-blue-500/20' : 'bg-black border-zinc-700 text-zinc-500 hover:border-white hover:text-white'}`}
+                             >
+                               Enable: Ad-Blocker {isAdBlockerEnabled ? 'ON' : 'OFF'}
+                             </button>
+
+                             {/* GHOST MODE TOGGLE */}
                              <button 
                                 onClick={() => setIsProxyEnabled(!isProxyEnabled)} 
                                 className={`px-5 py-2.5 text-[9px] font-black uppercase rounded-full border transition-all duration-300 shadow-lg ${isProxyEnabled ? 'bg-emerald-600/20 border-emerald-500 text-emerald-400 shadow-emerald-500/20' : 'bg-black border-zinc-700 text-zinc-500 hover:border-white hover:text-white'}`}
                              >
-                               Enable: Ghost-Mode (Experimental) {isProxyEnabled ? 'ON' : 'OFF'}
+                               Enable: Ghost-Mode {isProxyEnabled ? 'ON' : 'OFF'}
                              </button>
                           </div>
                        </div>
@@ -242,14 +239,15 @@ export default function BlehflixPeak() {
                          </div>
                        )}
 
-                       {/* THE SANDBOXED PLAYER (AD-BLOCKER) */}
                        <div className="aspect-video w-full bg-black rounded-2xl overflow-hidden border border-zinc-800 shadow-[0_0_50px_rgba(0,0,0,0.5)] relative">
                           <iframe 
-                            key={`${activeItem?.id}-${server}-${season}-${episode}-${isProxyEnabled}`}
+                            // Adding isAdBlockerEnabled to the key forces the video to refresh instantly when toggled
+                            key={`${activeItem?.id}-${server}-${season}-${episode}-${isProxyEnabled}-${isAdBlockerEnabled}`}
                             src={getStreamUrl()} 
                             className="w-full h-full" 
                             allowFullScreen 
-                            sandbox="allow-same-origin allow-scripts allow-forms"
+                            // The magic line conditionally applying the sandbox restriction
+                            sandbox={isAdBlockerEnabled ? "allow-same-origin allow-scripts allow-forms" : undefined}
                             scrolling="no"
                             frameBorder="0"
                             referrerPolicy="no-referrer"
