@@ -23,7 +23,7 @@ export default function BlehflixPeak() {
   const [activeItem, setActiveItem] = useState<any | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [isProxyEnabled, setIsProxyEnabled] = useState(false);
-  const [isAdBlockerEnabled, setIsAdBlockerEnabled] = useState(false); // Default to OFF to fix the "Sandbox detected" error
+  const [isAdBlockerEnabled, setIsAdBlockerEnabled] = useState(false); 
   
   const [season, setSeason] = useState(1);
   const [episode, setEpisode] = useState(1);
@@ -84,7 +84,7 @@ export default function BlehflixPeak() {
             {(query.length > 2 ? searchResults : items).map((item) => (
               <div key={item.id} onClick={() => { setActiveItem(item); setView('details'); setIsStreaming(false); window.scrollTo(0,0); }} className="cursor-pointer group">
                 <div className="aspect-[2/3] rounded-xl overflow-hidden border border-white/10 group-hover:border-red-600 transition-all">
-                  <img src={`https://image.tmdb.org/t/p/w500${item.poster_path}`} className="w-full h-full object-cover" />
+                  <img src={`https://image.tmdb.org/t/p/w500${item.poster_path}`} alt={item.title || item.name} className="w-full h-full object-cover" />
                 </div>
                 <h4 className="mt-2 text-[10px] font-bold uppercase truncate text-zinc-400 group-hover:text-white">{item.title || item.name}</h4>
               </div>
@@ -96,7 +96,7 @@ export default function BlehflixPeak() {
           <button onClick={() => setView('browse')} className="mb-8 text-xs font-black text-zinc-500 hover:text-white uppercase">← Back</button>
           <div className="flex flex-col lg:flex-row gap-12">
             <div className="w-full lg:w-1/4">
-               <img src={`https://image.tmdb.org/t/p/w500${activeItem?.poster_path}`} className="rounded-2xl border border-white/10" />
+               <img src={`https://image.tmdb.org/t/p/w500${activeItem?.poster_path}`} alt="poster" className="rounded-2xl border border-white/10" />
             </div>
             <div className="flex-1 space-y-6">
                <h2 className="text-5xl font-black uppercase italic tracking-tighter">{activeItem?.title || activeItem?.name}</h2>
@@ -119,11 +119,10 @@ export default function BlehflixPeak() {
                          src={getStreamUrl()} 
                          className="w-full h-full" 
                          allowFullScreen 
-                         // This is the fix for the "Sandbox Detected" error:
                          sandbox={isAdBlockerEnabled ? "allow-forms allow-scripts allow-same-origin allow-pointer-lock" : "allow-forms allow-scripts allow-same-origin"}
                        />
                     </div>
-                    <p className="text-[10px] text-zinc-500 uppercase font-black text-center">Tip: Use "Vidora" + Ghost Mode OFF to bypass School WiFi blocks</p>
+                    <p className="text-[10px] text-zinc-500 uppercase font-black text-center">Tip: Use &quot;Vidora&quot; + Ghost Mode OFF to bypass School WiFi blocks</p>
                  </div>
                )}
             </div>
