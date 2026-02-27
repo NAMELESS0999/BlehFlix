@@ -23,7 +23,6 @@ export default function BlehflixPeak() {
   const [activeItem, setActiveItem] = useState<any | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [isProxyEnabled, setIsProxyEnabled] = useState(false);
-  const [isAdBlockerEnabled, setIsAdBlockerEnabled] = useState(false); 
   
   const [season, setSeason] = useState(1);
   const [episode, setEpisode] = useState(1);
@@ -68,14 +67,14 @@ export default function BlehflixPeak() {
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white font-sans">
-      <nav className="p-6 flex flex-col lg:flex-row justify-between items-center fixed w-full z-50 bg-black/80 backdrop-blur-xl border-b border-white/5 gap-4">
-        <h1 onClick={() => {setView('browse'); setIsStreaming(false);}} className="text-3xl font-black text-red-600 cursor-pointer tracking-tighter">BLEHFLIX™</h1>
-        <div className="flex bg-zinc-900 rounded-full p-1">
-          <button onClick={() => setType('movie')} className={`px-6 py-2 rounded-full text-[10px] font-black uppercase ${type === 'movie' ? 'bg-red-600' : 'text-zinc-500'}`}>Movies</button>
-          <button onClick={() => setType('tv')} className={`px-6 py-2 rounded-full text-[10px] font-black uppercase ${type === 'tv' ? 'bg-red-600' : 'text-zinc-500'}`}>Shows</button>
+    <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-red-600">
+      <nav className="p-6 flex flex-col lg:flex-row justify-between items-center fixed w-full z-50 bg-black/90 backdrop-blur-2xl border-b border-white/5 gap-4">
+        <h1 onClick={() => {setView('browse'); setIsStreaming(false);}} className="text-3xl font-black text-red-600 cursor-pointer tracking-tighter hover:scale-105 transition-all">BLEHFLIX™</h1>
+        <div className="flex bg-zinc-900 rounded-full p-1 border border-white/5">
+          <button onClick={() => setType('movie')} className={`px-6 py-2 rounded-full text-[10px] font-black uppercase transition-all ${type === 'movie' ? 'bg-red-600 text-white' : 'text-zinc-500 hover:text-white'}`}>Movies</button>
+          <button onClick={() => setType('tv')} className={`px-6 py-2 rounded-full text-[10px] font-black uppercase transition-all ${type === 'tv' ? 'bg-red-600 text-white' : 'text-zinc-500 hover:text-white'}`}>Shows</button>
         </div>
-        <input type="text" placeholder="Search..." className="w-full lg:max-w-md bg-zinc-900 border border-zinc-800 px-6 py-2 rounded-full text-sm outline-none" onChange={handleSearch} />
+        <input type="text" placeholder="Search peak cinema..." className="w-full lg:max-w-md bg-zinc-900/50 border border-zinc-800 px-6 py-2 rounded-full text-sm outline-none focus:border-red-600 transition-all" onChange={handleSearch} />
       </nav>
 
       {view === 'browse' ? (
@@ -83,46 +82,46 @@ export default function BlehflixPeak() {
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-6">
             {(query.length > 2 ? searchResults : items).map((item) => (
               <div key={item.id} onClick={() => { setActiveItem(item); setView('details'); setIsStreaming(false); window.scrollTo(0,0); }} className="cursor-pointer group">
-                <div className="aspect-[2/3] rounded-xl overflow-hidden border border-white/10 group-hover:border-red-600 transition-all">
+                <div className="aspect-[2/3] rounded-xl overflow-hidden border border-white/10 group-hover:border-red-600 group-hover:-translate-y-2 transition-all duration-300">
                   <img src={`https://image.tmdb.org/t/p/w500${item.poster_path}`} alt={item.title || item.name} className="w-full h-full object-cover" />
                 </div>
-                <h4 className="mt-2 text-[10px] font-bold uppercase truncate text-zinc-400 group-hover:text-white">{item.title || item.name}</h4>
+                <h4 className="mt-3 text-[10px] font-black uppercase truncate text-zinc-500 group-hover:text-white">{item.title || item.name}</h4>
               </div>
             ))}
           </div>
         </main>
       ) : (
-        <main className="pt-32 pb-20 px-4 md:px-16 max-w-7xl mx-auto">
-          <button onClick={() => setView('browse')} className="mb-8 text-xs font-black text-zinc-500 hover:text-white uppercase">← Back</button>
+        <main className="pt-32 pb-20 px-4 md:px-16 max-w-[90rem] mx-auto">
+          <button onClick={() => setView('browse')} className="mb-8 text-[10px] font-black text-zinc-500 hover:text-white uppercase tracking-widest transition-all">← Return to Lobby</button>
           <div className="flex flex-col lg:flex-row gap-12">
             <div className="w-full lg:w-1/4">
-               <img src={`https://image.tmdb.org/t/p/w500${activeItem?.poster_path}`} alt="poster" className="rounded-2xl border border-white/10" />
+               <img src={`https://image.tmdb.org/t/p/w500${activeItem?.poster_path}`} alt="poster" className="rounded-2xl border border-white/10 shadow-2xl" />
+               <div className="mt-6 p-4 bg-zinc-900/50 rounded-xl border border-white/5">
+                  <p className="text-zinc-400 text-xs leading-relaxed">{activeItem?.overview}</p>
+               </div>
             </div>
-            <div className="flex-1 space-y-6">
-               <h2 className="text-5xl font-black uppercase italic tracking-tighter">{activeItem?.title || activeItem?.name}</h2>
+            <div className="flex-1 space-y-8">
+               <h2 className="text-5xl md:text-7xl font-black uppercase italic tracking-tighter leading-none">{activeItem?.title || activeItem?.name}</h2>
                {!isStreaming ? (
-                 <button onClick={() => setIsStreaming(true)} className="bg-red-600 px-10 py-4 rounded-xl font-black uppercase hover:scale-105 transition-all">Initialize Stream</button>
+                 <button onClick={() => setIsStreaming(true)} className="bg-red-600 px-12 py-5 rounded-xl font-black uppercase tracking-widest hover:scale-105 transition-all shadow-[0_0_30px_rgba(229,9,20,0.3)]">▶ Start Node</button>
                ) : (
-                 <div className="space-y-4">
-                    <div className="flex flex-wrap gap-2 bg-zinc-900 p-4 rounded-xl border border-white/5">
+                 <div className="space-y-4 animate-in fade-in duration-700">
+                    <div className="flex flex-wrap gap-2 bg-zinc-900/80 backdrop-blur-md p-4 rounded-2xl border border-white/5">
                        {Object.keys(ENCODED_DOMAINS).map(key => (
-                         <button key={key} onClick={() => setServer(key as any)} className={`px-4 py-2 text-[10px] font-black uppercase rounded-lg ${server === key ? 'bg-red-600' : 'bg-black text-zinc-500'}`}>{key}</button>
+                         <button key={key} onClick={() => setServer(key as any)} className={`px-4 py-2 text-[10px] font-black uppercase rounded-lg transition-all ${server === key ? 'bg-red-600 text-white' : 'bg-black text-zinc-500 border border-zinc-800 hover:text-white'}`}>{key}</button>
                        ))}
-                       <div className="ml-auto flex gap-2">
-                         <button onClick={() => setIsAdBlockerEnabled(!isAdBlockerEnabled)} className={`px-4 py-2 text-[10px] font-black rounded-full border ${isAdBlockerEnabled ? 'bg-blue-600 border-blue-400' : 'border-zinc-700 text-zinc-500'}`}>Ad-Block: {isAdBlockerEnabled ? 'ON' : 'OFF'}</button>
-                         <button onClick={() => setIsProxyEnabled(!isProxyEnabled)} className={`px-4 py-2 text-[10px] font-black rounded-full border ${isProxyEnabled ? 'bg-emerald-600 border-emerald-400' : 'border-zinc-700 text-zinc-500'}`}>Ghost: {isProxyEnabled ? 'ON' : 'OFF'}</button>
-                       </div>
+                       <button onClick={() => setIsProxyEnabled(!isProxyEnabled)} className={`ml-auto px-4 py-2 text-[10px] font-black rounded-full border transition-all ${isProxyEnabled ? 'bg-emerald-600 border-emerald-400 text-white' : 'border-zinc-700 text-zinc-500'}`}>Ghost: {isProxyEnabled ? 'ON' : 'OFF'}</button>
                     </div>
-                    <div className="aspect-video bg-black rounded-2xl overflow-hidden border border-zinc-800 shadow-2xl">
+                    <div className="aspect-video bg-black rounded-3xl overflow-hidden border border-white/5 shadow-2xl relative">
                        <iframe 
-                         key={`${activeItem?.id}-${server}-${isAdBlockerEnabled}-${isProxyEnabled}`}
+                         key={`${activeItem?.id}-${server}-${isProxyEnabled}`}
                          src={getStreamUrl()} 
                          className="w-full h-full" 
                          allowFullScreen 
-                         sandbox={isAdBlockerEnabled ? "allow-forms allow-scripts allow-same-origin allow-pointer-lock" : "allow-forms allow-scripts allow-same-origin"}
+                         /* Removed strict sandbox to fix the 'ruined' green error screen */
                        />
                     </div>
-                    <p className="text-[10px] text-zinc-500 uppercase font-black text-center">Tip: Use &quot;Vidora&quot; + Ghost Mode OFF to bypass School WiFi blocks</p>
+                    <p className="text-[9px] text-zinc-600 uppercase font-black text-center tracking-[0.2em]">Note: Use &quot;Vidora&quot; for high-speed streaming. Toggle Ghost Mode if blocked by WiFi.</p>
                  </div>
                )}
             </div>
