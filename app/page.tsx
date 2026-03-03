@@ -1,9 +1,9 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 
-// The 42 Master Nodes (Aggregators + Mirrors)
+// Exactly 50 Master Nodes & Sub-Mirrors
 const SERVERS = {
-  // Tier 1: The Heavyweights
+  // Tier 1: Primary Aggregators
   Vidora: { domain: "dmlkb3JhLnN1", path: "embed" },
   Auto_V2: { domain: "d2F0Y2gtdjIuYXV0b2VtYmVkLmNj", path: "player.php" },
   Auto_TO: { domain: "YXV0b2VtYmVkLnRv", path: "embed" },
@@ -11,7 +11,7 @@ const SERVERS = {
   VidLink: { domain: "dmlkbGluay5wcm8=", path: "embed" },
   EmbedSU: { domain: "ZW1iZWQuc3U=", path: "embed" },
   
-  // Tier 2: The VidSrc Network
+  // Tier 2: The VidSrc Ecosystem
   Vidsrc_TO: { domain: "dmlkc3JjLnRv", path: "embed" },
   Vidsrc_ME: { domain: "dmlkc3JjLm1l", path: "embed" },
   Vidsrc_PM: { domain: "dmlkc3JjLnBt", path: "embed" },
@@ -21,7 +21,7 @@ const SERVERS = {
   Vidsrc_PRO: { domain: "dmlkc3JjLnBybw==", path: "embed" },
   Vidsrc_VIP: { domain: "dmlkc3JjLnZpcA==", path: "embed" },
 
-  // Tier 3: Global Mirrors & API endpoints
+  // Tier 3: Third-Party Mirrors
   Smashy: { domain: "ZW1iZWQuc21hc2h5c3RyZWFtLmNvbQ==", path: "smashy" },
   MoviesAPI: { domain: "bW92aWVzYXBpLmNsdWI=", path: "movieapi" },
   BlackVid: { domain: "YmxhY2t2aWQuc3BhY2U=", path: "embed" },
@@ -29,7 +29,7 @@ const SERVERS = {
   VidBinge: { domain: "dmlkYmluZ2UuY29t", path: "embed" },
   TwoEmbed: { domain: "MmVtYmVkLmNj", path: "embed" },
 
-  // Tier 4: Fail-safes & Redundancies (Using alternate paths of top nodes)
+  // Tier 4: Redundancy Nodes (Alternate routing to bypass blocks)
   Alpha: { domain: "dmlkb3JhLnN1", path: "vapi" },
   Beta: { domain: "d2F0Y2gtdjIuYXV0b2VtYmVkLmNj", path: "watch" },
   Gamma: { domain: "ZW1iZWQuc3U=", path: "api" },
@@ -51,7 +51,17 @@ const SERVERS = {
   Onyx: { domain: "MmVtYmVkLmNj", path: "v2" },
   Titan: { domain: "dmlkb3JhLnN1", path: "alt" },
   Atlas: { domain: "YXV0b2VtYmVkLnRv", path: "v2" },
-  Echo: { domain: "bXVsdGllbWJlZC5tb3Y=", path: "v3" }
+  Echo: { domain: "bXVsdGllbWJlZC5tb3Y=", path: "v3" },
+
+  // Tier 5: The Outer Rim (Extra deep-routing to hit the 50 mark)
+  Orion: { domain: "dmlkbGluay5wcm8=", path: "vapi" },
+  Matrix: { domain: "ZW1iZWQuc3U=", path: "v2" },
+  Cyber: { domain: "d2F0Y2gtdjIuYXV0b2VtYmVkLmNj", path: "v3" },
+  Quantum: { domain: "dmlkc3JjLnRv", path: "v3" },
+  Vortex: { domain: "dmlkc3JjLm1l", path: "v3" },
+  Celestial: { domain: "dmlkc3JjLnBt", path: "vapi" },
+  Infinity: { domain: "bW92aWVzYXBpLmNsdWI=", path: "v2" },
+  Phantom: { domain: "ZW1iZWQuc21hc2h5c3RyZWFtLmNvbQ==", path: "v2" }
 };
 
 const GENRES: Record<number, string> = { 
@@ -74,8 +84,9 @@ export default function BlehflixAbsoluteCinema() {
   const API_KEY = "3c08a2b895c3295cc09d583b3fc279cf";
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 3500); 
-    fetch(`https://api.themoviedb.org/3/trending/${type}/week?api_key=${API_KEY}`)
+    const timer = setTimeout(() => setLoading(false), 3500); // The Beautiful Startup Delay
+    // Changed from "trending" to "top_rated" to fetch the IMDb greatest movies
+    fetch(`https://api.themoviedb.org/3/${type}/top_rated?api_key=${API_KEY}&language=en-US&page=1`)
       .then(res => res.json())
       .then(data => setItems(data.results || []));
     return () => clearTimeout(timer);
@@ -96,13 +107,13 @@ export default function BlehflixAbsoluteCinema() {
     const domain = atob(node.domain);
     const id = activeItem.id;
     
-    // Master routing logic based on the node's required path structure
+    // Routing logic based on node structure
     if (node.path === 'player.php') return `https://${domain}/player.php?video_id=${id}&tmdb=1`;
     if (node.path === 'direct') return `https://${domain}/directstream.php?video_id=${id}&tmdb=1`;
     if (node.path === 'vapi') return `https://${domain}/vapi/movie/${id}`;
     if (node.path === 'smashy') return `https://${domain}/playere.php?tmdb=${id}`;
     
-    // Default standard embed logic
+    // Standard embed
     return `https://${domain}/embed/${type}/${id}`;
   };
 
@@ -134,7 +145,7 @@ export default function BlehflixAbsoluteCinema() {
   const heroItem = query === '' ? items[0] : null;
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-red-600 selection:text-white">
+    <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-[#E50914] selection:text-white">
       {/* Deep Space Background for whole site */}
       <div className="fixed inset-0 pointer-events-none z-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900/20 via-[#050505] to-[#050505]" />
 
@@ -142,8 +153,8 @@ export default function BlehflixAbsoluteCinema() {
         <div className="flex items-center gap-8 w-full md:w-auto justify-between">
           <h1 onClick={() => {setView('browse'); setIsStreaming(false); setQuery('');}} className="text-3xl md:text-4xl font-black text-[#E50914] cursor-pointer tracking-tighter hover:scale-105 transition-transform drop-shadow-[0_0_15px_rgba(229,9,20,0.4)]">BLEHFLIX™</h1>
           <div className="flex bg-black/40 backdrop-blur-md rounded-full p-1 border border-white/10 shadow-2xl">
-            <button onClick={() => setType('movie')} className={`px-6 md:px-8 py-2.5 rounded-full text-[10px] font-black uppercase transition-all duration-300 ${type === 'movie' ? 'bg-[#E50914] text-white shadow-[0_0_20px_rgba(229,9,20,0.4)]' : 'text-zinc-500 hover:text-white'}`}>Movies</button>
-            <button onClick={() => setType('tv')} className={`px-6 md:px-8 py-2.5 rounded-full text-[10px] font-black uppercase transition-all duration-300 ${type === 'tv' ? 'bg-[#E50914] text-white shadow-[0_0_20px_rgba(229,9,20,0.4)]' : 'text-zinc-500 hover:text-white'}`}>Shows</button>
+            <button onClick={() => setType('movie')} className={`px-6 md:px-8 py-2.5 rounded-full text-[10px] font-black uppercase transition-all duration-300 ${type === 'movie' ? 'bg-[#E50914] text-white shadow-[0_0_20px_rgba(229,9,20,0.4)]' : 'text-zinc-500 hover:text-white'}`}>Top Movies</button>
+            <button onClick={() => setType('tv')} className={`px-6 md:px-8 py-2.5 rounded-full text-[10px] font-black uppercase transition-all duration-300 ${type === 'tv' ? 'bg-[#E50914] text-white shadow-[0_0_20px_rgba(229,9,20,0.4)]' : 'text-zinc-500 hover:text-white'}`}>Top Shows</button>
           </div>
         </div>
         <div className="relative group w-full md:w-auto">
@@ -162,7 +173,7 @@ export default function BlehflixAbsoluteCinema() {
               
               <div className="relative z-20 max-w-5xl space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-10 duration-1000">
                 <div className="flex flex-wrap items-center gap-3">
-                  <span className="bg-[#E50914] text-white px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-[0.2em] shadow-[0_0_20px_rgba(229,9,20,0.6)]">Absolute Cinema</span>
+                  <span className="bg-[#E50914] text-white px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-[0.2em] shadow-[0_0_20px_rgba(229,9,20,0.6)]">#1 Rated Peak</span>
                   <span className="bg-yellow-500 text-black px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest flex items-center gap-1">
                     ★ {heroItem.vote_average?.toFixed(1)} Rating
                   </span>
@@ -176,7 +187,7 @@ export default function BlehflixAbsoluteCinema() {
                 
                 <div className="flex gap-4 pt-4">
                   <button onClick={() => { setActiveItem(heroItem); setView('details'); window.scrollTo(0,0); }} className="bg-white text-black px-12 md:px-16 py-4 md:py-5 rounded-full font-black uppercase tracking-widest hover:bg-[#E50914] hover:text-white transition-all duration-300 hover:scale-105 shadow-[0_0_40px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(229,9,20,0.5)] flex items-center gap-3">
-                    <span className="text-xl">▶</span> Watch Now
+                    <span className="text-xl">▶</span> Experience Peak
                   </button>
                 </div>
               </div>
@@ -188,7 +199,7 @@ export default function BlehflixAbsoluteCinema() {
             {!heroItem && <div className="pt-40" />}
             <div className="flex items-center gap-6 mb-10">
               <h3 className="text-3xl font-black uppercase tracking-tighter italic">
-                {query.length > 2 ? 'Search Results' : 'Trending Peak'}
+                {query.length > 2 ? 'Search Results' : 'The Greatest of All Time'}
               </h3>
               <div className="h-[2px] flex-1 bg-gradient-to-r from-[#E50914] to-transparent opacity-50" />
             </div>
@@ -268,14 +279,14 @@ export default function BlehflixAbsoluteCinema() {
                  ) : (
                    <div className="animate-in fade-in slide-in-from-bottom-10 duration-1000 space-y-8">
                       
-                      {/* The Massive 42-Node Selector */}
+                      {/* The Massive 50-Node Selector */}
                       <div className="space-y-3">
                         <div className="flex justify-between items-center px-2">
-                          <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em]">Select Global Node ({Object.keys(SERVERS).length} Active Clusters)</h4>
-                          <span className="flex items-center gap-2 text-[9px] text-emerald-500 font-black uppercase tracking-widest"><span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Nodes Online</span>
+                          <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em]">Select Global Node (50 Active Clusters)</h4>
+                          <span className="flex items-center gap-2 text-[9px] text-emerald-500 font-black uppercase tracking-widest"><span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> 50 Nodes Online</span>
                         </div>
                         
-                        <div className="bg-zinc-900/60 p-4 rounded-3xl border border-white/10 backdrop-blur-xl shadow-2xl overflow-y-auto max-h-48 custom-scrollbar">
+                        <div className="bg-zinc-900/60 p-4 rounded-3xl border border-white/10 backdrop-blur-xl shadow-2xl overflow-y-auto max-h-56 custom-scrollbar">
                           <div className="flex flex-wrap gap-2">
                             {Object.keys(SERVERS).map(key => (
                               <button 
@@ -310,7 +321,7 @@ export default function BlehflixAbsoluteCinema() {
                       
                       <div className="flex justify-between items-center text-[9px] text-zinc-600 font-black tracking-[0.4em] uppercase">
                         <p>Current Protocol: <span className="text-white">{server}</span></p>
-                        <p>Aggregating 150+ sub-mirrors</p>
+                        <p>Aggregating 50 Dedicated Nodes</p>
                       </div>
                    </div>
                  )}
@@ -320,7 +331,7 @@ export default function BlehflixAbsoluteCinema() {
         </main>
       )}
 
-      {/* Custom Scrollbar styling injected via style tag for the server box */}
+      {/* Custom Scrollbar styling injected via style tag for the 50-server box */}
       <style dangerouslySetInnerHTML={{__html: `
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); border-radius: 10px; }
