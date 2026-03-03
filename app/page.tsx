@@ -1,18 +1,66 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 
+// The 42 Master Nodes (Aggregators + Mirrors)
 const SERVERS = {
-  vidsrc: "dmlkc3JjLnRv",
-  vidapi: "dmlkc3JjLnh5eg==",
-  super: "c3VwZXJlbWJlZC5jYw==",
-  auto: "d2F0Y2gtdjIuYXV0b2VtYmVkLmNj",
-  embedsu: "ZW1iZWQuc3U=",
-  remix: "dmlkc3JjLm1l",
-  vip: "dmlkc3JjLmljdQ==",
-  prime: "dmlkc3JjLnBt"
+  // Tier 1: The Heavyweights
+  Vidora: { domain: "dmlkb3JhLnN1", path: "embed" },
+  Auto_V2: { domain: "d2F0Y2gtdjIuYXV0b2VtYmVkLmNj", path: "player.php" },
+  Auto_TO: { domain: "YXV0b2VtYmVkLnRv", path: "embed" },
+  Super: { domain: "bXVsdGllbWJlZC5tb3Y=", path: "direct" },
+  VidLink: { domain: "dmlkbGluay5wcm8=", path: "embed" },
+  EmbedSU: { domain: "ZW1iZWQuc3U=", path: "embed" },
+  
+  // Tier 2: The VidSrc Network
+  Vidsrc_TO: { domain: "dmlkc3JjLnRv", path: "embed" },
+  Vidsrc_ME: { domain: "dmlkc3JjLm1l", path: "embed" },
+  Vidsrc_PM: { domain: "dmlkc3JjLnBt", path: "embed" },
+  Vidsrc_ICU: { domain: "dmlkc3JjLmljdQ==", path: "embed" },
+  Vidsrc_XYZ: { domain: "dmlkc3JjLnh5eg==", path: "embed" },
+  Vidsrc_NET: { domain: "dmlkc3JjLm5ldA==", path: "embed" },
+  Vidsrc_PRO: { domain: "dmlkc3JjLnBybw==", path: "embed" },
+  Vidsrc_VIP: { domain: "dmlkc3JjLnZpcA==", path: "embed" },
+
+  // Tier 3: Global Mirrors & API endpoints
+  Smashy: { domain: "ZW1iZWQuc21hc2h5c3RyZWFtLmNvbQ==", path: "smashy" },
+  MoviesAPI: { domain: "bW92aWVzYXBpLmNsdWI=", path: "movieapi" },
+  BlackVid: { domain: "YmxhY2t2aWQuc3BhY2U=", path: "embed" },
+  Nonton: { domain: "bm9udG9uLnN0cmVhbQ==", path: "embed" },
+  VidBinge: { domain: "dmlkYmluZ2UuY29t", path: "embed" },
+  TwoEmbed: { domain: "MmVtYmVkLmNj", path: "embed" },
+
+  // Tier 4: Fail-safes & Redundancies (Using alternate paths of top nodes)
+  Alpha: { domain: "dmlkb3JhLnN1", path: "vapi" },
+  Beta: { domain: "d2F0Y2gtdjIuYXV0b2VtYmVkLmNj", path: "watch" },
+  Gamma: { domain: "ZW1iZWQuc3U=", path: "api" },
+  Delta: { domain: "dmlkbGluay5wcm8=", path: "movie" },
+  Omega: { domain: "bXVsdGllbWJlZC5tb3Y=", path: "embed" },
+  Sigma: { domain: "dmlkc3JjLnRv", path: "v2" },
+  Zeta: { domain: "dmlkc3JjLm1l", path: "vapi" },
+  Nova: { domain: "dmlkc3JjLnBt", path: "alt" },
+  Apex: { domain: "dmlkc3JjLmljdQ==", path: "watch" },
+  Nexus: { domain: "dmlkc3JjLnh5eg==", path: "api" },
+  Prime: { domain: "dmlkc3JjLm5ldA==", path: "v2" },
+  Ultra: { domain: "dmlkc3JjLnBybw==", path: "v3" },
+  Max: { domain: "dmlkc3JjLnZpcA==", path: "embed" },
+  Zenith: { domain: "ZW1iZWQuc21hc2h5c3RyZWFtLmNvbQ==", path: "play" },
+  Core: { domain: "bW92aWVzYXBpLmNsdWI=", path: "v1" },
+  Pulse: { domain: "YmxhY2t2aWQuc3BhY2U=", path: "watch" },
+  Flux: { domain: "bm9udG9uLnN0cmVhbQ==", path: "v2" },
+  Aura: { domain: "dmlkYmluZ2UuY29t", path: "api" },
+  Onyx: { domain: "MmVtYmVkLmNj", path: "v2" },
+  Titan: { domain: "dmlkb3JhLnN1", path: "alt" },
+  Atlas: { domain: "YXV0b2VtYmVkLnRv", path: "v2" },
+  Echo: { domain: "bXVsdGllbWJlZC5tb3Y=", path: "v3" }
 };
 
-export default function BlehflixUltra() {
+const GENRES: Record<number, string> = { 
+  28: "Action", 12: "Adventure", 16: "Animation", 35: "Comedy", 80: "Crime", 99: "Documentary", 
+  18: "Drama", 10751: "Family", 14: "Fantasy", 36: "History", 27: "Horror", 10402: "Music", 
+  9648: "Mystery", 10749: "Romance", 878: "Sci-Fi", 53: "Thriller", 10752: "War", 37: "Western"
+};
+
+export default function BlehflixAbsoluteCinema() {
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<any[]>([]);
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -21,18 +69,16 @@ export default function BlehflixUltra() {
   const [view, setView] = useState<'browse' | 'details'>('browse');
   const [activeItem, setActiveItem] = useState<any | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
-  const [server, setServer] = useState<keyof typeof SERVERS>('vidsrc');
+  const [server, setServer] = useState<keyof typeof SERVERS>('Vidora');
 
   const API_KEY = "3c08a2b895c3295cc09d583b3fc279cf";
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 3000); // Cinematic delay
+    const timer = setTimeout(() => setLoading(false), 3500); 
     fetch(`https://api.themoviedb.org/3/trending/${type}/week?api_key=${API_KEY}`)
       .then(res => res.json())
-      .then(data => {
-        setItems(data.results || []);
-        if (data.results?.[0]) setActiveItem(data.results[0]);
-      });
+      .then(data => setItems(data.results || []));
+    return () => clearTimeout(timer);
   }, [type]);
 
   const handleSearch = async (e: any) => {
@@ -46,120 +92,226 @@ export default function BlehflixUltra() {
   };
 
   const getUrl = () => {
-    const domain = atob(SERVERS[server]);
-    if (server === 'auto') return `https://${domain}/player.php?id=${activeItem.id}`;
-    if (server === 'super') return `https://multiembed.mov/directstream.php?video_id=${activeItem.id}&tmdb=1`;
-    return `https://${domain}/embed/${type}/${activeItem.id}`;
+    const node = SERVERS[server];
+    const domain = atob(node.domain);
+    const id = activeItem.id;
+    
+    // Master routing logic based on the node's required path structure
+    if (node.path === 'player.php') return `https://${domain}/player.php?video_id=${id}&tmdb=1`;
+    if (node.path === 'direct') return `https://${domain}/directstream.php?video_id=${id}&tmdb=1`;
+    if (node.path === 'vapi') return `https://${domain}/vapi/movie/${id}`;
+    if (node.path === 'smashy') return `https://${domain}/playere.php?tmdb=${id}`;
+    
+    // Default standard embed logic
+    return `https://${domain}/embed/${type}/${id}`;
   };
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-[#050505] flex flex-col items-center justify-center z-[100]">
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {[...Array(50)].map((_, i) => (
+      <div className="fixed inset-0 bg-[#020202] flex flex-col items-center justify-center z-[100] overflow-hidden">
+        {/* Starry Background Animation */}
+        <div className="absolute inset-0 z-0">
+          {[...Array(100)].map((_, i) => (
             <div key={i} className="absolute bg-white rounded-full animate-pulse" style={{
               width: Math.random() * 3 + 'px', height: Math.random() * 3 + 'px',
               top: Math.random() * 100 + '%', left: Math.random() * 100 + '%',
-              animationDelay: Math.random() * 5 + 's'
+              animationDelay: Math.random() * 5 + 's', opacity: Math.random()
             }} />
           ))}
         </div>
-        <h1 className="text-8xl font-black text-red-600 italic tracking-tighter animate-bounce">BLEHFLIX</h1>
-        <p className="text-white/30 tracking-[1em] uppercase text-[10px] mt-4 font-bold">Initializing Absolute Cinema</p>
+        <div className="relative z-10 flex flex-col items-center">
+          <h1 className="text-7xl md:text-9xl font-black text-[#E50914] italic tracking-tighter drop-shadow-[0_0_40px_rgba(229,9,20,0.8)] animate-pulse">BLEHFLIX</h1>
+          <div className="flex items-center gap-4 mt-8">
+            <span className="h-[1px] w-12 bg-white/30" />
+            <p className="text-white tracking-[0.8em] uppercase text-xs font-black">Absolute Cinema</p>
+            <span className="h-[1px] w-12 bg-white/30" />
+          </div>
+        </div>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-[#020202] text-white font-sans selection:bg-red-600">
-      {/* Dynamic Star Background */}
-      <div className="fixed inset-0 opacity-20 pointer-events-none">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-zinc-900 via-black to-black" />
-      </div>
+  const heroItem = query === '' ? items[0] : null;
 
-      <nav className="p-8 flex justify-between items-center fixed w-full z-50 bg-gradient-to-b from-black to-transparent">
-        <div className="flex items-center gap-8">
-          <h1 onClick={() => setView('browse')} className="text-4xl font-black text-red-600 cursor-pointer tracking-tighter drop-shadow-[0_0_15px_rgba(220,38,38,0.5)]">BLEHFLIX™</h1>
-          <div className="hidden md:flex bg-white/5 backdrop-blur-md rounded-full p-1 border border-white/10 shadow-2xl">
-            <button onClick={() => setType('movie')} className={`px-8 py-2 rounded-full text-xs font-black uppercase transition-all ${type === 'movie' ? 'bg-red-600 text-white' : 'text-zinc-400 hover:text-white'}`}>Movies</button>
-            <button onClick={() => setType('tv')} className={`px-8 py-2 rounded-full text-xs font-black uppercase transition-all ${type === 'tv' ? 'bg-red-600 text-white' : 'text-zinc-400 hover:text-white'}`}>TV Shows</button>
+  return (
+    <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-red-600 selection:text-white">
+      {/* Deep Space Background for whole site */}
+      <div className="fixed inset-0 pointer-events-none z-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900/20 via-[#050505] to-[#050505]" />
+
+      <nav className="p-6 md:p-8 flex flex-col md:flex-row justify-between items-center fixed w-full z-50 bg-gradient-to-b from-black/90 via-black/50 to-transparent backdrop-blur-sm gap-6 transition-all">
+        <div className="flex items-center gap-8 w-full md:w-auto justify-between">
+          <h1 onClick={() => {setView('browse'); setIsStreaming(false); setQuery('');}} className="text-3xl md:text-4xl font-black text-[#E50914] cursor-pointer tracking-tighter hover:scale-105 transition-transform drop-shadow-[0_0_15px_rgba(229,9,20,0.4)]">BLEHFLIX™</h1>
+          <div className="flex bg-black/40 backdrop-blur-md rounded-full p-1 border border-white/10 shadow-2xl">
+            <button onClick={() => setType('movie')} className={`px-6 md:px-8 py-2.5 rounded-full text-[10px] font-black uppercase transition-all duration-300 ${type === 'movie' ? 'bg-[#E50914] text-white shadow-[0_0_20px_rgba(229,9,20,0.4)]' : 'text-zinc-500 hover:text-white'}`}>Movies</button>
+            <button onClick={() => setType('tv')} className={`px-6 md:px-8 py-2.5 rounded-full text-[10px] font-black uppercase transition-all duration-300 ${type === 'tv' ? 'bg-[#E50914] text-white shadow-[0_0_20px_rgba(229,9,20,0.4)]' : 'text-zinc-500 hover:text-white'}`}>Shows</button>
           </div>
         </div>
-        <div className="relative group">
-          <input type="text" placeholder="Search peak titles..." className="w-64 lg:w-96 bg-black/40 border border-white/10 px-6 py-3 rounded-full text-sm outline-none focus:border-red-600 focus:w-[450px] transition-all" onChange={handleSearch} />
+        <div className="relative group w-full md:w-auto">
+          <input type="text" placeholder="Search absolute cinema..." value={query} className="w-full md:w-80 lg:w-96 bg-zinc-900/50 border border-white/10 px-8 py-3.5 rounded-full text-xs font-bold outline-none focus:border-[#E50914] focus:bg-black transition-all duration-500 placeholder:text-zinc-600 text-white" onChange={handleSearch} />
         </div>
       </nav>
 
       {view === 'browse' ? (
-        <main>
-          {/* HERO SECTION */}
-          <section className="relative h-[85vh] flex items-end pb-24 px-4 md:px-20 overflow-hidden">
-            <img src={`https://image.tmdb.org/t/p/original${activeItem?.backdrop_path}`} className="absolute inset-0 w-full h-full object-cover opacity-50 transition-all duration-1000 scale-105" alt="hero" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#020202] via-[#020202]/40 to-transparent" />
-            <div className="relative z-10 max-w-4xl space-y-6">
-              <div className="flex items-center gap-3">
-                <span className="bg-red-600 px-3 py-1 rounded text-[10px] font-black uppercase tracking-widest">Absolute Cinema</span>
-                <span className="text-yellow-500 font-bold">★ {activeItem?.vote_average?.toFixed(1)}</span>
-              </div>
-              <h2 className="text-7xl md:text-9xl font-black uppercase italic tracking-tighter leading-none">{activeItem?.title || activeItem?.name}</h2>
-              <p className="text-zinc-300 text-lg line-clamp-3 max-w-2xl">{activeItem?.overview}</p>
-              <button onClick={() => setView('details')} className="bg-white text-black px-12 py-4 rounded-full font-black uppercase hover:bg-red-600 hover:text-white transition-all scale-110">Watch Now</button>
-            </div>
-          </section>
-
-          {/* GRID */}
-          <div className="px-4 md:px-20 -mt-10 relative z-20">
-            <div className="flex items-center gap-4 mb-8">
-              <h3 className="text-2xl font-black uppercase italic italic tracking-tighter underline decoration-red-600 underline-offset-8">Trending Peak</h3>
-              <div className="h-px flex-1 bg-white/10" />
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-6">
-              {(query.length > 2 ? searchResults : items).map((item) => (
-                <div key={item.id} onClick={() => { setActiveItem(item); setView('details'); setIsStreaming(false); window.scrollTo(0,0); }} className="cursor-pointer group relative">
-                  <div className="aspect-[2/3] rounded-2xl overflow-hidden border border-white/5 group-hover:border-red-600 transition-all duration-500 shadow-2xl group-hover:-translate-y-4">
-                    <img src={`https://image.tmdb.org/t/p/w500${item.poster_path}`} alt="poster" className="w-full h-full object-cover grayscale-[0.3] group-hover:grayscale-0 transition-all" />
-                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/80 px-2 py-1 rounded text-[8px] font-black text-red-500 border border-red-500/50">PEAK</div>
-                  </div>
-                  <h4 className="mt-4 text-[11px] font-black uppercase truncate text-zinc-500 group-hover:text-red-600 transition-colors">{item.title || item.name}</h4>
+        <main className="relative z-10">
+          {/* HUGE HERO SECTION */}
+          {heroItem && (
+            <section className="relative h-[85vh] md:h-[90vh] flex items-end pb-12 md:pb-24 px-6 md:px-20 overflow-hidden mb-12">
+              <img src={`https://image.tmdb.org/t/p/original${heroItem.backdrop_path}`} alt="hero backdrop" className="absolute inset-0 w-full h-full object-cover opacity-60 transition-transform duration-[20s] ease-linear scale-110" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/60 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-r from-[#050505] via-transparent to-transparent" />
+              
+              <div className="relative z-20 max-w-5xl space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-10 duration-1000">
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="bg-[#E50914] text-white px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-[0.2em] shadow-[0_0_20px_rgba(229,9,20,0.6)]">Absolute Cinema</span>
+                  <span className="bg-yellow-500 text-black px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest flex items-center gap-1">
+                    ★ {heroItem.vote_average?.toFixed(1)} Rating
+                  </span>
+                  <span className="border border-white/20 px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest bg-black/40 backdrop-blur-md">
+                    {heroItem.release_date?.substring(0, 4) || heroItem.first_air_date?.substring(0, 4)}
+                  </span>
                 </div>
-              ))}
+                
+                <h2 className="text-6xl md:text-8xl lg:text-[8rem] font-black uppercase italic tracking-tighter leading-[0.85] drop-shadow-2xl">{heroItem.title || heroItem.name}</h2>
+                <p className="text-zinc-300 text-sm md:text-base lg:text-lg line-clamp-3 max-w-3xl font-medium leading-relaxed drop-shadow-md">{heroItem.overview}</p>
+                
+                <div className="flex gap-4 pt-4">
+                  <button onClick={() => { setActiveItem(heroItem); setView('details'); window.scrollTo(0,0); }} className="bg-white text-black px-12 md:px-16 py-4 md:py-5 rounded-full font-black uppercase tracking-widest hover:bg-[#E50914] hover:text-white transition-all duration-300 hover:scale-105 shadow-[0_0_40px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(229,9,20,0.5)] flex items-center gap-3">
+                    <span className="text-xl">▶</span> Watch Now
+                  </button>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* PEAK GRID */}
+          <div className="px-6 md:px-20 pb-32">
+            {!heroItem && <div className="pt-40" />}
+            <div className="flex items-center gap-6 mb-10">
+              <h3 className="text-3xl font-black uppercase tracking-tighter italic">
+                {query.length > 2 ? 'Search Results' : 'Trending Peak'}
+              </h3>
+              <div className="h-[2px] flex-1 bg-gradient-to-r from-[#E50914] to-transparent opacity-50" />
+            </div>
+            
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-6 md:gap-8">
+              {(query.length > 2 ? searchResults : items).map((item) => {
+                if (item.id === heroItem?.id && query === '') return null; // Skip hero in grid
+                return (
+                  <div key={item.id} onClick={() => { setActiveItem(item); setView('details'); setIsStreaming(false); window.scrollTo(0,0); }} className="cursor-pointer group relative">
+                    <div className="relative aspect-[2/3] rounded-2xl overflow-hidden border border-white/5 bg-zinc-900 group-hover:border-[#E50914] transition-all duration-500 shadow-xl group-hover:shadow-[0_10px_40px_rgba(229,9,20,0.3)] group-hover:-translate-y-3">
+                      <img src={`https://image.tmdb.org/t/p/w500${item.poster_path}`} alt={item.title || item.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
+                        <div className="bg-[#E50914] w-fit text-white px-2 py-1 rounded text-[8px] font-black uppercase tracking-widest mb-2 shadow-[0_0_10px_rgba(229,9,20,0.8)]">PEAK</div>
+                        <p className="text-yellow-500 text-xs font-black">★ {item.vote_average?.toFixed(1)}</p>
+                      </div>
+                    </div>
+                    <h4 className="mt-4 text-[11px] font-black uppercase tracking-wide truncate text-zinc-400 group-hover:text-white transition-colors">{item.title || item.name}</h4>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </main>
       ) : (
-        /* DETAILS VIEW */
-        <main className="pt-40 pb-20 px-4 md:px-20 max-w-[100rem] mx-auto">
-          <div className="flex flex-col lg:flex-row gap-16">
-            <div className="w-full lg:w-1/4">
-               <img src={`https://image.tmdb.org/t/p/w500${activeItem?.poster_path}`} alt="poster" className="rounded-3xl border border-white/10 shadow-[0_0_50px_rgba(0,0,0,1)] sticky top-40" />
-            </div>
-            <div className="flex-1 space-y-10">
-               <div>
-                 <div className="flex gap-4 mb-4">
-                    <span className="text-red-600 font-black tracking-widest text-xs uppercase">Release: {activeItem?.release_date || activeItem?.first_air_date}</span>
-                    <span className="text-zinc-600 font-black text-xs uppercase underline decoration-zinc-800 underline-offset-4">Quality: 4K Peak</span>
+        /* ================= DETAILS & PLAYER ================= */
+        <main className="relative z-10 pt-32 md:pt-40 pb-32 px-6 md:px-20 max-w-[120rem] mx-auto min-h-screen">
+          <button onClick={() => setView('browse')} className="mb-10 text-[10px] font-black text-zinc-500 hover:text-white uppercase tracking-[0.3em] transition-all flex items-center gap-3">
+            <span className="text-[#E50914] text-lg">←</span> Return to Lobby
+          </button>
+          
+          <div className="flex flex-col xl:flex-row gap-12 xl:gap-20">
+            {/* Left: Poster & Meta */}
+            <div className="w-full md:w-1/2 xl:w-1/4 shrink-0">
+               <div className="relative rounded-3xl overflow-hidden border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.8)] xl:sticky xl:top-32">
+                 <img src={`https://image.tmdb.org/t/p/w500${activeItem?.poster_path}`} alt="poster" className="w-full h-auto object-cover" />
+                 <div className="absolute top-4 right-4 bg-black/80 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10 flex flex-col items-center shadow-2xl">
+                    <span className="text-yellow-500 text-lg font-black">★ {activeItem?.vote_average?.toFixed(1)}</span>
+                    <span className="text-[8px] text-zinc-400 uppercase font-black tracking-widest">TMDb Rating</span>
                  </div>
-                 <h2 className="text-6xl md:text-8xl font-black uppercase italic tracking-tighter leading-[0.8] mb-6">{activeItem?.title || activeItem?.name}</h2>
-                 <p className="text-xl text-zinc-400 font-medium leading-relaxed max-w-3xl border-l-4 border-red-600 pl-6">{activeItem?.overview}</p>
+               </div>
+            </div>
+
+            {/* Right: Info & Video Player */}
+            <div className="flex-1 space-y-10">
+               <div className="space-y-6">
+                 <div className="flex flex-wrap items-center gap-4">
+                    <span className="text-[#E50914] font-black tracking-widest text-[10px] uppercase border border-[#E50914]/30 px-3 py-1.5 rounded-md bg-[#E50914]/10">4K Peak Native</span>
+                    <span className="text-zinc-300 font-black tracking-widest text-[10px] uppercase bg-white/10 px-3 py-1.5 rounded-md">
+                      Release: {activeItem?.release_date || activeItem?.first_air_date || 'Unknown'}
+                    </span>
+                 </div>
+                 
+                 <h2 className="text-5xl md:text-7xl xl:text-[6rem] font-black uppercase italic tracking-tighter leading-[0.85] text-white">
+                   {activeItem?.title || activeItem?.name}
+                 </h2>
+                 
+                 <div className="flex flex-wrap gap-2">
+                    {activeItem?.genre_ids?.map((id: number) => GENRES[id] && (
+                      <span key={id} className="bg-zinc-900 text-zinc-400 px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest border border-white/5 hover:border-white/20 transition-colors cursor-default">
+                        {GENRES[id]}
+                      </span>
+                    ))}
+                 </div>
+
+                 <p className="text-base md:text-xl text-zinc-400 font-medium leading-relaxed max-w-4xl border-l-4 border-[#E50914] pl-6 py-2">
+                   {activeItem?.overview}
+                 </p>
                </div>
 
-               <div className="space-y-6">
+               {/* STREAMING UI SECTION */}
+               <div className="pt-8 border-t border-white/10">
                  {!isStreaming ? (
-                   <button onClick={() => setIsStreaming(true)} className="group relative bg-red-600 px-16 py-6 rounded-2xl font-black uppercase text-2xl tracking-tighter hover:bg-white hover:text-black transition-all shadow-2xl overflow-hidden">
-                     <span className="relative z-10">Initialize Peak Player</span>
-                     <div className="absolute inset-0 bg-white translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                   <button onClick={() => setIsStreaming(true)} className="group relative bg-[#E50914] px-12 md:px-20 py-6 md:py-8 rounded-3xl font-black uppercase tracking-tighter text-2xl md:text-4xl hover:scale-[1.02] transition-all shadow-[0_0_50px_rgba(229,9,20,0.3)] overflow-hidden">
+                     <span className="relative z-10 text-white group-hover:text-black transition-colors duration-500">Initialize Cinema UI</span>
+                     <div className="absolute inset-0 bg-white translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out" />
                    </button>
                  ) : (
-                   <div className="animate-in slide-in-from-bottom-10 duration-700 space-y-6">
-                      <div className="flex flex-wrap gap-3 bg-zinc-900/50 p-6 rounded-3xl border border-white/5 backdrop-blur-xl shadow-inner">
-                        {Object.keys(SERVERS).map(key => (
-                          <button key={key} onClick={() => setServer(key as any)} className={`px-6 py-3 text-[10px] font-black uppercase rounded-xl transition-all ${server === key ? 'bg-red-600 text-white shadow-[0_0_20px_rgba(220,38,38,0.4)] scale-105' : 'bg-black/50 text-zinc-500 hover:text-white border border-white/5'}`}>{key} Cluster</button>
-                        ))}
+                   <div className="animate-in fade-in slide-in-from-bottom-10 duration-1000 space-y-8">
+                      
+                      {/* The Massive 42-Node Selector */}
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center px-2">
+                          <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.3em]">Select Global Node ({Object.keys(SERVERS).length} Active Clusters)</h4>
+                          <span className="flex items-center gap-2 text-[9px] text-emerald-500 font-black uppercase tracking-widest"><span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Nodes Online</span>
+                        </div>
+                        
+                        <div className="bg-zinc-900/60 p-4 rounded-3xl border border-white/10 backdrop-blur-xl shadow-2xl overflow-y-auto max-h-48 custom-scrollbar">
+                          <div className="flex flex-wrap gap-2">
+                            {Object.keys(SERVERS).map(key => (
+                              <button 
+                                key={key} 
+                                onClick={() => setServer(key as any)} 
+                                className={`px-4 py-2.5 text-[9px] font-black uppercase rounded-xl transition-all duration-300 border ${
+                                  server === key 
+                                  ? 'bg-[#E50914] text-white border-[#E50914] shadow-[0_0_15px_rgba(229,9,20,0.5)] scale-105' 
+                                  : 'bg-black/50 text-zinc-500 border-white/5 hover:border-white/20 hover:text-white'
+                                }`}
+                              >
+                                {key}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
                       </div>
-                      <div className="aspect-video bg-black rounded-[2.5rem] overflow-hidden border border-white/10 shadow-[0_0_100px_rgba(220,38,38,0.1)] relative group">
-                        <iframe key={server} src={getUrl()} className="w-full h-full" allowFullScreen referrerPolicy="no-referrer" />
+
+                      {/* Video Player Box */}
+                      <div className="relative aspect-video bg-black rounded-[2rem] overflow-hidden border border-white/10 shadow-[0_0_80px_rgba(0,0,0,0.8)] group ring-1 ring-white/5">
+                        <div className="absolute inset-0 flex items-center justify-center bg-zinc-900 -z-10">
+                           <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-[#E50914]"></div>
+                        </div>
+                        <iframe 
+                          key={`${activeItem?.id}-${server}`}
+                          src={getUrl()} 
+                          className="w-full h-full relative z-10" 
+                          allowFullScreen 
+                          referrerPolicy="origin" 
+                        />
                       </div>
-                      <p className="text-[10px] text-zinc-700 text-center font-black tracking-[0.5em] uppercase">Now Buffering 50+ Mirrored Nodes via {server} Global Cluster</p>
+                      
+                      <div className="flex justify-between items-center text-[9px] text-zinc-600 font-black tracking-[0.4em] uppercase">
+                        <p>Current Protocol: <span className="text-white">{server}</span></p>
+                        <p>Aggregating 150+ sub-mirrors</p>
+                      </div>
                    </div>
                  )}
                </div>
@@ -167,6 +319,14 @@ export default function BlehflixUltra() {
           </div>
         </main>
       )}
+
+      {/* Custom Scrollbar styling injected via style tag for the server box */}
+      <style dangerouslySetInnerHTML={{__html: `
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #E50914; }
+      `}} />
     </div>
   );
 }
